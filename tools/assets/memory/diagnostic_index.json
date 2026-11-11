@@ -1,0 +1,202 @@
+{
+  "schema": "curated_diagnostic_entries_v1",
+  "entries": [
+    {
+      "id": "general-material-inertia",
+      "revision": "1",
+      "resource_role": "knowledge",
+      "summary": "Material, section, inertia and damping affect distinct static and dynamic mechanisms.",
+      "type": "general",
+      "trigger": [
+        "material",
+        "density",
+        "section",
+        "inertia",
+        "relaxation",
+        "viscosity"
+      ],
+      "source_refs": [
+        "docs/migration-manifest.md#knowledge"
+      ],
+      "evidence_level": "conditional_model_derivation; procedural_guidance",
+      "applicability": "Only within the current registered model, physical parameter domain and frozen task; ordinary derivatives require a regular fixed active set.",
+      "limitations": "Context only. No current evidence, task acceptance, universal stiffness/stability, global infeasibility or hardware/continuum convergence claim.",
+      "related_skills": [
+        "skill-parameter-model@1",
+        "skill-matched-comparison@1",
+        "skill-finite-search@1"
+      ],
+      "knowledge_refs": [],
+      "entry_id": "general-material-inertia",
+      "kind": "procedure",
+      "task": "soft_robot_research",
+      "structure": "tendon_robot_family",
+      "failure_type": "research_method",
+      "version": "1",
+      "path": "memory/generic_methods.json",
+      "content_key": "general-material-inertia@1",
+      "status": "public_procedural_guidance; generalization_unverified",
+      "introduced_in": "typed_knowledge_v1",
+      "authored_language": "en",
+      "language_origin": {
+        "kind": "authored_english",
+        "basis": "Generic procedural subset adapted for standalone distribution; historical cases and evidence references excluded."
+      },
+      "benchmark_sensitive": false,
+      "disclosure": "answer_isolated",
+      "applicable_tasks": [
+        "reach_and_hold",
+        "tracking",
+        "position_tool_axis",
+        "oriented_tracking",
+        "multicondition_reach_tool_axis",
+        "passive_force_response",
+        "passive_head_stabilization",
+        "passive_progressive_stiffness",
+        "soft_robot_research"
+      ],
+      "confidence": "Conditional on the registered model and stated assumptions."
+    },
+    {
+      "id": "skill-parameter-model",
+      "revision": "1",
+      "resource_role": "skill",
+      "summary": "Begin with a physical mechanism hypothesis and the observation that would distinguish it from a competitor; retrieve only relevant theory and scoped historical experience.",
+      "source_refs": [
+        "docs/migration-manifest.md#knowledge"
+      ],
+      "limitations": "Context only. No current evidence, task acceptance, universal stiffness/stability, global infeasibility or hardware/continuum convergence claim.",
+      "knowledge_refs": [],
+      "entry_id": "skill-parameter-model",
+      "kind": "procedure",
+      "task": "soft_robot_research",
+      "structure": "tendon_robot_family",
+      "failure_type": "research_method",
+      "version": "1",
+      "path": "memory/generic_methods.json",
+      "content_key": "skill-parameter-model@1",
+      "status": "public_procedural_guidance; generalization_unverified",
+      "introduced_in": "typed_knowledge_v1",
+      "authored_language": "en",
+      "language_origin": {
+        "kind": "authored_english",
+        "basis": "Generic procedural subset adapted for standalone distribution; historical cases and evidence references excluded."
+      },
+      "benchmark_sensitive": false,
+      "disclosure": "answer_isolated",
+      "applicable_tasks": [
+        "reach_and_hold",
+        "tracking",
+        "position_tool_axis",
+        "oriented_tracking",
+        "multicondition_reach_tool_axis",
+        "passive_force_response",
+        "passive_head_stabilization",
+        "passive_progressive_stiffness",
+        "soft_robot_research"
+      ],
+      "evidence_level": "conditional_model_derivation; procedural_guidance",
+      "applicability": "Only within the current registered model, physical parameter domain and frozen task; ordinary derivatives require a regular fixed active set.",
+      "confidence": "Conditional on the registered model and stated assumptions.",
+      "related_skills": [
+        "skill-parameter-model@1",
+        "skill-matched-comparison@1",
+        "skill-finite-search@1"
+      ]
+    },
+    {
+      "id": "skill-matched-comparison",
+      "revision": "1",
+      "resource_role": "skill",
+      "summary": "Identify competing hypotheses, interventions and confounders before choosing a comparison. Match task, model protocol, named initial state, environment, evaluation conditions and control treatment.",
+      "source_refs": [
+        "docs/migration-manifest.md#knowledge"
+      ],
+      "limitations": "Context only. No current evidence, task acceptance, universal stiffness/stability, global infeasibility or hardware/continuum convergence claim.",
+      "knowledge_refs": [],
+      "entry_id": "skill-matched-comparison",
+      "kind": "procedure",
+      "task": "soft_robot_research",
+      "structure": "tendon_robot_family",
+      "failure_type": "research_method",
+      "version": "1",
+      "path": "memory/generic_methods.json",
+      "content_key": "skill-matched-comparison@1",
+      "status": "public_procedural_guidance; generalization_unverified",
+      "introduced_in": "typed_knowledge_v1",
+      "authored_language": "en",
+      "language_origin": {
+        "kind": "authored_english",
+        "basis": "Generic procedural subset adapted for standalone distribution; historical cases and evidence references excluded."
+      },
+      "benchmark_sensitive": false,
+      "disclosure": "answer_isolated",
+      "applicable_tasks": [
+        "reach_and_hold",
+        "tracking",
+        "position_tool_axis",
+        "oriented_tracking",
+        "multicondition_reach_tool_axis",
+        "passive_force_response",
+        "passive_head_stabilization",
+        "passive_progressive_stiffness",
+        "soft_robot_research"
+      ],
+      "evidence_level": "conditional_model_derivation; procedural_guidance",
+      "applicability": "Only within the current registered model, physical parameter domain and frozen task; ordinary derivatives require a regular fixed active set.",
+      "confidence": "Conditional on the registered model and stated assumptions.",
+      "related_skills": [
+        "skill-parameter-model@1",
+        "skill-matched-comparison@1",
+        "skill-finite-search@1"
+      ]
+    },
+    {
+      "id": "skill-finite-search",
+      "revision": "1",
+      "resource_role": "skill",
+      "summary": "A nonpassing finite search is an observation about its parameterization, initialization and allowance, not a verified exclusion of the structure.",
+      "source_refs": [
+        "docs/migration-manifest.md#knowledge"
+      ],
+      "limitations": "Context only. No current evidence, task acceptance, universal stiffness/stability, global infeasibility or hardware/continuum convergence claim.",
+      "knowledge_refs": [],
+      "entry_id": "skill-finite-search",
+      "kind": "procedure",
+      "task": "soft_robot_research",
+      "structure": "tendon_robot_family",
+      "failure_type": "research_method",
+      "version": "1",
+      "path": "memory/generic_methods.json",
+      "content_key": "skill-finite-search@1",
+      "status": "public_procedural_guidance; generalization_unverified",
+      "introduced_in": "typed_knowledge_v1",
+      "authored_language": "en",
+      "language_origin": {
+        "kind": "authored_english",
+        "basis": "Generic procedural subset adapted for standalone distribution; historical cases and evidence references excluded."
+      },
+      "benchmark_sensitive": false,
+      "disclosure": "answer_isolated",
+      "applicable_tasks": [
+        "reach_and_hold",
+        "tracking",
+        "position_tool_axis",
+        "oriented_tracking",
+        "multicondition_reach_tool_axis",
+        "passive_force_response",
+        "passive_head_stabilization",
+        "passive_progressive_stiffness",
+        "soft_robot_research"
+      ],
+      "evidence_level": "conditional_model_derivation; procedural_guidance",
+      "applicability": "Only within the current registered model, physical parameter domain and frozen task; ordinary derivatives require a regular fixed active set.",
+      "confidence": "Conditional on the registered model and stated assumptions.",
+      "related_skills": [
+        "skill-parameter-model@1",
+        "skill-matched-comparison@1",
+        "skill-finite-search@1"
+      ]
+    }
+  ]
+}

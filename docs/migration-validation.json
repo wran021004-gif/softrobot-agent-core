@@ -1,0 +1,72 @@
+{
+  "production_imports": {
+    "imported": 155,
+    "optional_modules_not_available": [
+      {
+        "module": "tools.rl.checks",
+        "requires": "rl optional extra",
+        "missing": "torch"
+      },
+      {
+        "module": "tools.rl.env",
+        "requires": "rl optional extra",
+        "missing": "gymnasium"
+      },
+      {
+        "module": "tools.rl.train",
+        "requires": "rl optional extra",
+        "missing": "torch"
+      }
+    ]
+  },
+  "registry": {
+    "entries": 38,
+    "math": true,
+    "structure": true,
+    "physics": true,
+    "all_declared_source_files_present": true
+  },
+  "reach": {
+    "parsed": true,
+    "compiled_configuration": true,
+    "family": "task.reach",
+    "zero_provider_budget": true
+  },
+  "tracking": {
+    "parsed": true,
+    "compiled_configuration": true,
+    "family": "task.tracking",
+    "zero_provider_budget": true
+  },
+  "store": {
+    "initialized": true,
+    "independent_data_home": true,
+    "sessions": 0,
+    "calls": 0,
+    "artifacts": 0,
+    "installation_writes": false
+  },
+  "packaged_resources": {
+    "matlab_wrappers": 13,
+    "examples_present": true,
+    "knowledge_entries": 4
+  },
+  "installed_without_git": true,
+  "provider_requests_sent": 0,
+  "physics_steps": 0,
+  "optimization_calls": 0,
+  "historical_tests_run": 0,
+  "base_main_reporter_without_scientific_extras": true,
+  "registry_and_task_parsing_without_scientific_extras": true,
+  "compile": true,
+  "cli_help": true,
+  "standard_wheel_build": true,
+  "pip_wheel_install": true,
+  "source_checkout_unchanged": true,
+  "python_version": "3.11.16",
+  "source_commit": "fd2c1694dbef225cc08a516d2249735c9c180053",
+  "source_branch": "codex/passive-research-capabilities-20261107",
+  "validation_date": "2026-11-11",
+  "no_historical_data_migrated": true,
+  "credential_scan": "No real credential/private-key patterns or personal absolute paths found in public files."
+}

@@ -1,0 +1,11 @@
+{
+  "source_commit": "fd2c1694dbef225cc08a516d2249735c9c180053",
+  "source_file": "memory/knowledge/research_organized_v2.json",
+  "selected_method_keys": {
+    "general-material-inertia": "general-material-inertia@3",
+    "skill-parameter-model": "skill-parameter-model@4",
+    "skill-matched-comparison": "skill-matched-comparison@4",
+    "skill-finite-search": "skill-finite-search@3"
+  },
+  "excluded": "All historical cases, result references and candidate parameters"
+}

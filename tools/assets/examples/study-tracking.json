@@ -1,0 +1,34 @@
+{
+  "defaults": "defaults.json",
+  "study_id": "example-tracking",
+  "base_commit": "HEAD",
+  "authorization": "Local illustrative configuration. Provider budget is zero; no automatic model requests.",
+  "start_mode": "family_space",
+  "family_space": "family.json",
+  "candidate_initialization": "all_candidate_dofs_zero_v1",
+  "task": "task-tracking.json",
+  "evidence_destination": "exports/example-tracking",
+  "topology_scope": {
+    "segment_counts": [
+      2
+    ],
+    "tendon_counts": [
+      4
+    ],
+    "cells_per_segment": 6
+  },
+  "initial_structure_strategy": "agent_choice",
+  "knowledge": {
+    "mode": "off"
+  },
+  "control": "control-tracking.json",
+  "family_execution": {
+    "backend": {
+      "version": "1.2.0"
+    }
+  },
+  "reference_parameters": {
+    "holding_tip_speed_weight": 0.0,
+    "terminal_tip_speed_weight": 0.0
+  }
+}

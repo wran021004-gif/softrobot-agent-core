@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.venv*/
+build/
+dist/
+*.egg-info/
+.env
+.env.*
+provider.local.json
+*.sqlite
+*.sqlite-*
+*.log
+runs/
+exports/
+/provider.json
+/credentials.json
+*.local.json

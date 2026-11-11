@@ -1,0 +1,44 @@
+{
+  "version": "serial_family_space_v2",
+  "family_id": "generic_serial_family_v2",
+  "executable_segment_counts": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
+  ],
+  "unsupported": [
+    "8-12 tendons: declared, not execution validated",
+    "polygon section domain not granted in this example",
+    "axial extension",
+    "shear",
+    "twist",
+    "friction",
+    "swept self-collision",
+    "High segment-count dynamics and controller compatibility require candidate-specific validation"
+  ],
+  "serial_assembly": {
+    "root_segment": "segment_0",
+    "repeated_segment": "segment_1",
+    "guide": "mid_guide",
+    "connector": "connector",
+    "payload": "payload",
+    "cell_count_bounds": [
+      1,
+      32
+    ],
+    "default_cells": 12
+  },
+  "base_space": "family-base.json",
+  "assembly": {
+    "provenance": {
+      "source": "Generic repeated serial-family assembly",
+      "rule": "No successful candidate is supplied."
+    }
+  }
+}

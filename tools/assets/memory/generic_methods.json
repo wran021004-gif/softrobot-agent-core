@@ -1,0 +1,248 @@
+{
+  "schema": "generic_research_methods_v1",
+  "entries": {
+    "general-material-inertia@1": {
+      "id": "general-material-inertia",
+      "entry_id": "general-material-inertia",
+      "revision": "1",
+      "type": "general",
+      "resource_role": "knowledge",
+      "summary": "Material, section, inertia and damping affect distinct static and dynamic mechanisms.",
+      "trigger": [
+        "material",
+        "density",
+        "section",
+        "inertia",
+        "relaxation",
+        "viscosity"
+      ],
+      "source_refs": [
+        "docs/migration-manifest.md#knowledge"
+      ],
+      "evidence_level": "conditional_model_derivation; procedural_guidance",
+      "applicability": "Only within the current registered model, physical parameter domain and frozen task; ordinary derivatives require a regular fixed active set.",
+      "limitations": "Context only. No current evidence, task acceptance, universal stiffness/stability, global infeasibility or hardware/continuum convergence claim.",
+      "related_skills": [
+        "skill-parameter-model@1",
+        "skill-matched-comparison@1",
+        "skill-finite-search@1"
+      ],
+      "physical_explanation": [
+        "segments.i.young_pa and section dimensions jointly determine EI through the actual section inertia tensor. Shape and section angle affect both bending directions.",
+        "Density and physical masses affect inertia; physical_parameters.viscosity_y_nm2_s and viscosity_z_nm2_s affect dissipation and settling. A change in dynamic qualification is not automatically a static stiffness improvement."
+      ],
+      "confidence": "Conditional on the registered model and stated assumptions.",
+      "knowledge_refs": [],
+      "parameter_relations": [
+        {
+          "parameter_ids": [
+            "segments.0.young_pa",
+            "segments.0.length_m"
+          ],
+          "observable_ids": [
+            "joint_stiffness"
+          ],
+          "physical_relation": "Constitutive stiffness and discretized bending length jointly enter compiled hinge stiffness; changing length also changes geometry and inertia.",
+          "applicability": "Same registered segment, fixed section, interpolation and cell count; inspect the actual compiler law before transferring a beam scaling argument.",
+          "source_refs": [
+            "extensions/tendon_family/compiler.py",
+            "extensions/tendon_family/mujoco_analysis.py"
+          ],
+          "evidence_level": "theoretical_model_dependency",
+          "limitations": "No current experiment, strict derivative, universal length law or task-performance guarantee.",
+          "discriminating_observations": "Compare compiled stiffness, mass and response under each isolated change and their matched joint change. Proportional displacement changes alone do not establish localization."
+        },
+        {
+          "parameter_ids": [
+            "segments.0.physical_parameters.density_kg_m3",
+            "segments.0.length_m"
+          ],
+          "observable_ids": [
+            "total_mass",
+            "mass_matrix"
+          ],
+          "physical_relation": "Density and geometry jointly determine distributed mass; articulated inertia also depends on the declared pose and unchanged rigid components.",
+          "applicability": "Both IDs must exist in the current Parameter Registry; same pose, section, mounting and discretization.",
+          "source_refs": [
+            "extensions/tendon_family/compiler.py",
+            "extensions/tendon_family/mujoco_analysis.py"
+          ],
+          "evidence_level": "theoretical_model_dependency",
+          "limitations": "Fixed-pose inertia is not an optimized task capability or a static stiffness effect.",
+          "discriminating_observations": "Inspect total mass and fixed-pose mass matrix independently of stiffness and control adaptation."
+        }
+      ],
+      "parameter_reference_semantics": "IDs/patterns refer to the current candidate Parameter Registry; unavailable coordinates are not granted by this document.",
+      "observable_ids": [
+        "constraint_slack_set",
+        "constraint_active_set",
+        "constraint_tension_margin",
+        "constraint_length_residual",
+        "re_equilibrated_position_response",
+        "finite_time_task_violation",
+        "constraint_multiplier"
+      ],
+      "version": "1",
+      "task": "soft_robot_research",
+      "language_origin": {
+        "kind": "authored_english",
+        "basis": "Generic procedural subset adapted for standalone distribution; historical cases and evidence references excluded."
+      }
+    },
+    "skill-parameter-model@1": {
+      "id": "skill-parameter-model",
+      "entry_id": "skill-parameter-model",
+      "revision": "1",
+      "resource_role": "skill",
+      "summary": "Begin with a physical mechanism hypothesis and the observation that would distinguish it from a competitor; retrieve only relevant theory and scoped historical experience.",
+      "when_to_use": "A parameter change needs a checked model meaning.",
+      "inputs": [
+        "Parameter group/candidate",
+        "Generator/compiler and force law facts",
+        "Fixed/reoptimized input declaration"
+      ],
+      "workflow": [
+        "Begin with a physical mechanism hypothesis and the observation that would distinguish it from a competitor; retrieve only relevant theory and scoped historical experience.",
+        "Resolve exact parameter IDs and Observable IDs from the current candidate registries. Trace each parameter through geometry, constitutive laws, force mapping, state solution and the selected control treatment; explicit inputs may override defaults.",
+        "Identify parameters that jointly influence the same observable and confounding effects on other observables. State fixed conditions, reference state and competing coupling predictions.",
+        "Check continuity, legal perturbation domains, matched identities and qualified branches. Separate M0 mechanisms, M1 fixed input, M2 consistently reoptimized capability and genuinely implemented M3 closed loop.",
+        "If the current parameterization cannot express the hypothesized mechanism, propose an explicit versioned change rather than interpreting ineffective coordinates or silently changing the model. Main selects the next action."
+      ],
+      "outputs": [
+        "Main-owned falsifiable mechanism question, registered parameter/observable references, matched conditions and interpretation limits"
+      ],
+      "limitations": "Context only. No current evidence, task acceptance, universal stiffness/stability, global infeasibility or hardware/continuum convergence claim.",
+      "knowledge_refs": [],
+      "high_level_capabilities": [
+        "evidence_read",
+        "experience_retrieve",
+        "research_analysis",
+        "research_plan"
+      ],
+      "source_refs": [
+        "docs/migration-manifest.md#knowledge"
+      ],
+      "overlap": "Shared evidence-reading steps are dependencies; the stated decision remains distinct from other workflows.",
+      "scientific_method": [
+        "Start with a physical phenomenon and competing mechanism hypotheses; retrieve relevant Knowledge on demand.",
+        "Trace a proposed registered parameter through generator, physical compiler and actual observable. Distinguish model derivation from historical observations."
+      ],
+      "evidence_level": "conditional_model_derivation; procedural_guidance",
+      "applicability": "Only within the current registered model, physical parameter domain and frozen task; ordinary derivatives require a regular fixed active set.",
+      "confidence": "Conditional on the registered model and stated assumptions.",
+      "related_skills": [
+        "skill-parameter-model@1",
+        "skill-matched-comparison@1",
+        "skill-finite-search@1"
+      ],
+      "version": "1",
+      "task": "soft_robot_research",
+      "language_origin": {
+        "kind": "authored_english",
+        "basis": "Generic procedural subset adapted for standalone distribution; historical cases and evidence references excluded."
+      }
+    },
+    "skill-matched-comparison@1": {
+      "id": "skill-matched-comparison",
+      "entry_id": "skill-matched-comparison",
+      "revision": "1",
+      "resource_role": "skill",
+      "summary": "Identify competing hypotheses, interventions and confounders before choosing a comparison. Match task, model protocol, named initial state, environment, evaluation conditions and control treatment.",
+      "when_to_use": "Attribute differences between results.",
+      "inputs": [
+        "Owned result references",
+        "Load/task/initial-state/model identities",
+        "Validity and input-treatment facts"
+      ],
+      "workflow": [
+        "Identify competing hypotheses, interventions and confounders before choosing a comparison. Match task, model protocol, named initial state, environment, evaluation conditions and control treatment.",
+        "Choose one common baseline, each parameter changed alone, and the same two changes together. Hold every nonresearch parameter fixed and inspect actual registry values, not coordinate labels alone.",
+        "For M2 use the same reoptimization opportunities at every point; inspect optimality and report best-found finite-budget comparisons when optimality is unproved. Never mix fixed-input and reoptimized observations.",
+        "Retain qualification failures, active-set changes and missing results. Withhold a complete interaction when any of the four matched results is invalid or missing.",
+        "Compare delta1=y10-y00, delta2=y01-y00 and I12=y11-y10-y01+y00 with sources and numerical resolution. These are finite local contrasts, not automatically mixed derivatives or global causal laws."
+      ],
+      "outputs": [
+        "Main-owned falsifiable mechanism question, registered parameter/observable references, matched conditions and interpretation limits"
+      ],
+      "limitations": "Context only. No current evidence, task acceptance, universal stiffness/stability, global infeasibility or hardware/continuum convergence claim.",
+      "knowledge_refs": [],
+      "high_level_capabilities": [
+        "evidence_read",
+        "experience_retrieve"
+      ],
+      "source_refs": [
+        "docs/migration-manifest.md#knowledge"
+      ],
+      "overlap": "Shared evidence-reading steps are dependencies; the stated decision remains distinct from other workflows.",
+      "scientific_method": [
+        "Select fixed conditions and the contrast that can discriminate competing hypotheses; control identities explicitly.",
+        "Use a derivative only where regular, a four-point interact for two continuous coordinates, or a valid matched structure/constraint comparison. Invalid arms leave causality unresolved."
+      ],
+      "evidence_level": "conditional_model_derivation; procedural_guidance",
+      "applicability": "Only within the current registered model, physical parameter domain and frozen task; ordinary derivatives require a regular fixed active set.",
+      "confidence": "Conditional on the registered model and stated assumptions.",
+      "related_skills": [
+        "skill-parameter-model@1",
+        "skill-matched-comparison@1",
+        "skill-finite-search@1"
+      ],
+      "version": "1",
+      "task": "soft_robot_research",
+      "language_origin": {
+        "kind": "authored_english",
+        "basis": "Generic procedural subset adapted for standalone distribution; historical cases and evidence references excluded."
+      }
+    },
+    "skill-finite-search@1": {
+      "id": "skill-finite-search",
+      "entry_id": "skill-finite-search",
+      "revision": "1",
+      "resource_role": "skill",
+      "summary": "A nonpassing finite search is an observation about its parameterization, initialization and allowance, not a verified exclusion of the structure.",
+      "when_to_use": "Repeated finite control-search misses.",
+      "inputs": [
+        "Saved search outcomes/domain",
+        "Frozen task/model",
+        "Remaining legal effort"
+      ],
+      "workflow": [
+        "Read termination and task validity separately.",
+        "Form solver-domain versus structural/drive hypotheses.",
+        "Choose a matched contrast through research_plan, stating expected and weakening observations.",
+        "Interpret finite evidence with unresolved alternatives."
+      ],
+      "outputs": [
+        "Scoped diagnosis and a justified contrast or limited conclusion"
+      ],
+      "limitations": "Context only. No current evidence, task acceptance, universal stiffness/stability, global infeasibility or hardware/continuum convergence claim.",
+      "knowledge_refs": [],
+      "high_level_capabilities": [
+        "evidence_read",
+        "experience_retrieve",
+        "research_plan"
+      ],
+      "source_refs": [
+        "docs/migration-manifest.md#knowledge"
+      ],
+      "overlap": "Shared evidence-reading steps are dependencies; the stated decision remains distinct from other workflows.",
+      "scientific_method": [
+        "Select the representation and finite local effort from the scientific uncertainty; Main owns variable groups, topology choices and bounds.",
+        "If a seed cannot be represented without loss, change parameterization through generate or a matched comparison. Coupled Block is four-point interact, never arbitrary optimize."
+      ],
+      "evidence_level": "conditional_model_derivation; procedural_guidance",
+      "applicability": "Only within the current registered model, physical parameter domain and frozen task; ordinary derivatives require a regular fixed active set.",
+      "confidence": "Conditional on the registered model and stated assumptions.",
+      "related_skills": [
+        "skill-parameter-model@1",
+        "skill-matched-comparison@1",
+        "skill-finite-search@1"
+      ],
+      "version": "1",
+      "task": "soft_robot_research",
+      "language_origin": {
+        "kind": "authored_english",
+        "basis": "Generic procedural subset adapted for standalone distribution; historical cases and evidence references excluded."
+      }
+    }
+  }
+}

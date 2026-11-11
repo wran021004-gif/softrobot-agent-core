@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "softrobot-agent-core"
+version = "0.1.0"
+description = "Evidence-driven soft-robot research runtime with mathematical and physical tools"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.10,<3", "numpy>=1.26,<3", "scipy>=1.12,<2",
+  "httpx>=0.27,<1", "openai>=2,<3", "jsonschema>=4.22,<5", "PyYAML>=6,<7",
+  "strands-agents==1.59.0", "strands-harness==0.2.0",
+]
+
+[project.optional-dependencies]
+physics = ["mujoco>=3.2,<4"]
+optimization = ["casadi>=3.6,<4"]
+conic = ["cvxpy>=1.6,<2", "clarabel>=0.9,<1"]
+rl = ["torch>=2", "gymnasium>=1,<2", "stable-baselines3>=2.4,<3", "mujoco>=3.2,<4"]
+deepseek = ["tokenizers>=0.22,<1"]
+
+[project.scripts]
+softrobot-agent = "tools.research.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tools*", "schemas*", "extensions*"]
+namespaces = false
+
+[tool.setuptools.package-data]
+tools = ["assets/**/*.json", "assets/**/*.m"]

@@ -1,0 +1,24 @@
+{
+  "defaults": "defaults.json",
+  "study_id": "example-reach",
+  "base_commit": "HEAD",
+  "authorization": "Local illustrative configuration. Provider budget is zero; no automatic model requests.",
+  "start_mode": "family_space",
+  "family_space": "family.json",
+  "candidate_initialization": "all_candidate_dofs_zero_v1",
+  "task": "task-reach.json",
+  "evidence_destination": "exports/example-reach",
+  "topology_scope": {
+    "segment_counts": [
+      2
+    ],
+    "tendon_counts": [
+      4
+    ],
+    "cells_per_segment": 6
+  },
+  "initial_structure_strategy": "agent_choice",
+  "knowledge": {
+    "mode": "off"
+  }
+}
