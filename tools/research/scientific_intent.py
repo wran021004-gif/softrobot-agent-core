@@ -316,6 +316,18 @@ def question_schema(spec, candidate=None, action=None, *, control_methods=None):
     return compact_schema(schema) if question_contract(spec) is ScientificQuestionV4 else schema
 
 
+def control_resolution_options(spec):
+    """Describe temporal choices within the explicit grant, without widening it."""
+    maximum=min(64,spec.get('native_control_limits',{}).get('knots_s',64))
+    counts=dict(coarse=3,moderate=5,fine=9,very_fine=17)
+    protocol=spec.get('analysis_protocol',{})
+    if protocol.get('duration_s') and protocol.get('period_s'):
+        counts['control_grid']=round(protocol['duration_s']/protocol['period_s'])
+    return dict(maximum_knots=maximum,resolution_knot_counts=counts,
+        allowed_resolutions=[name for name,count in counts.items() if 2<=count<=maximum],
+        scope='Grant-only choices; frozen time-grid alignment and scope are checked separately. No automatic resolution substitution.')
+
+
 def project_control_effort(schema,spec=None):
     """Provider projection only; historical numerical effort remains readable."""
     effort=schema.get('$defs',{}).get('ScientificControlEffort')
@@ -328,6 +340,13 @@ def project_control_effort(schema,spec=None):
             original=effort['properties'][key]
             effort['properties'][key]={**next(b for b in original['anyOf'] if b.get('type')!='null'),
                 **{k:v for k,v in original.items() if k=='description'}}
+        if spec is not None:
+            options=control_resolution_options(spec)
+            # Do not advertise a choice that this exact Study is guaranteed to reject.
+            # Unknown grid timing leaves control_grid to the compiler's original checks.
+            effort['properties']['resolution']['enum']=[name for name in effort['properties']['resolution']['enum']
+                if name in options['allowed_resolutions'] or name=='control_grid' and name not in options['resolution_knot_counts']]
+            effort['properties']['resolution']['description']+=f" Frozen knot grant: {options['maximum_knots']}; knot counts: {options['resolution_knot_counts']}."
         effort['description']='Choose temporal freedom, physical exploration scale and a shared finite callback cap. The program binds the numerical method, knots, active coefficients and step sizes; all starts share the cap. Every frozen task constraint remains scored.'
     return schema
 
@@ -801,7 +820,10 @@ def compile_v1(host, payload, *, tool_use_id, source_question=None, contract=Sci
                     physical_limit_n=max(t['force_limit_n'] for t in c['configuration']['robot']['structure']['data']['tendons'])))
                 knots=settings['knots_s']
             except ValueError as exc:
-                return feedback('needs_choice','SEARCH_SETTINGS_OUTSIDE_ORIGINAL_CONTRACT',field='control_search_effort',reason_detail=str(exc))
+                options=control_resolution_options({**spec,'analysis_protocol':protocol})
+                return feedback('needs_choice','SEARCH_SETTINGS_OUTSIDE_ORIGINAL_CONTRACT',field='control_search_effort',reason_detail=str(exc),
+                    control_resolution_options=options,
+                    requested_knots=options['resolution_knot_counts'].get(effort.resolution,effort.knot_count))
         try:defaults = LocalControlSearchSettings.model_validate(settings)
         except ValidationError as exc:
             return feedback('needs_choice','SEARCH_SETTINGS_OUTSIDE_ORIGINAL_CONTRACT',

@@ -75,6 +75,53 @@ def extend_provider_requests(host, approval):
         requires_committed_binding=True,requires_current_identity_research_authorization=True,provider_requests_sent=0)
 
 
+def authorize_native_knot_limit(host, approval):
+    """Explicit local user addendum for temporal freedom; never a Main tool.
+
+    Does not change the optimizer, task, physics, input bounds, callback/iteration
+    limits, count quotas, receipts or saved scientific evidence. Rebind and the
+    existing identity-bound formal authorization are required before continuation.
+    """
+    from copy import deepcopy
+    from tools.state_io import digest
+    from tools.research.provider import pending
+    from tools.research.contracts import LocalControlSearchSettings
+    identity=digest(approval)
+    with host.store.transaction() as db:
+        current=host.store.session(host.run_id,db)['state'];spec=current['spec']
+        for ref in current.get('native_knot_limit_authorizations',[]):
+            if host.store.artifact(ref,db=db)['approval_identity']==identity:
+                return dict(already_applied=True,reference=ref,
+                    knot_limit=spec['native_control_limits']['knots_s'])
+        scope=approval.get('scope',{});old=spec.get('native_control_limits',{}).get('knots_s');new=scope.get('new_knot_limit')
+        maximum=LocalControlSearchSettings.model_json_schema()['properties']['knots_s']['maxItems']
+        if (approval.get('version')!='native_knot_limit_approval_v1' or approval.get('approved') is not True
+                or not approval.get('source') or approval.get('scope_identity')!=digest(scope)
+                or set(scope)!={'study_id','resolved_identity','previous_knot_limit','new_knot_limit'}
+                or scope['study_id']!=host.run_id or scope['resolved_identity']!=spec['resolved_identity']
+                or scope['previous_knot_limit']!=old or type(old) is not int or type(new) is not int
+                or not old<new<=maximum or spec['mode']!='formal_research' or 'analysis' not in spec.get('capabilities',[])):
+            raise ValueError('EXACT_USER_APPROVED_NATIVE_KNOT_LIMIT_REQUIRED')
+        if (current.get('pending') or pending(host) or current['pilot'].get('unconsumed_response')
+                or current.get('selected') or current.get('success_gate') or current['research_status']=='stopped'
+                or db.execute('SELECT COUNT(*) FROM calls WHERE receipt IS NULL').fetchone()[0]):
+            raise ValueError('SETTLED_NONSUCCESS_BOUNDARY_REQUIRED_FOR_NATIVE_KNOT_LIMIT')
+        ref=plain(host.store.put(db,dict(version='native_knot_limit_addendum_v1',approval=approval,
+            approval_identity=identity,previous_state=plain(host.store.put(db,current)),
+            all_costs_and_failures_retained=True,other_limits_unchanged=True,physical_task_unchanged=True)))
+        updated=deepcopy(spec);updated.pop('resolved_identity')
+        updated['native_control_limits']['knots_s']=new
+        updated.setdefault('authorization_addenda',[]).append(ref)
+        updated['resolved_identity']=digest(updated)
+        current.update(spec=updated,validation_extension_pending_binding=True)
+        current.setdefault('native_knot_limit_authorizations',[]).append(ref)
+        host.store.update_state(db,host.run_id,current)
+        host.store.event(db,host.run_id,'native_knot_limit_authorization','authorized',outputs=[ref])
+    return dict(already_applied=False,reference=ref,knot_limit=new,
+        resolved_identity=updated['resolved_identity'],requires_committed_binding=True,
+        requires_current_identity_research_authorization=True,provider_requests_sent=0)
+
+
 def authorize_unmetered_mathematics(host, approval):
     """Apply an explicit user quota change without resetting any computation.
 
