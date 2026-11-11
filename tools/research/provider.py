@@ -212,7 +212,8 @@ def transition_transport(host, approval):
         target=plain(ModelConfig.model_validate(scope['provider']))
         normalized=plain(ModelConfig.model_validate(old))
         transport_keys={'adapter','adapter_version','base_url','proxy_url','model_capabilities'}
-        if ({old['adapter'],target.get('adapter')}!={'openai_api','chatgpt_gateway'}
+        gateway_instance_change=old['adapter']==target.get('adapter')=='chatgpt_gateway'
+        if (not (gateway_instance_change or {old['adapter'],target.get('adapter')}=={'openai_api','chatgpt_gateway'})
                 or any(not transport_endpoint(p['adapter'],p['base_url']) for p in (old,target))
                 or {k:v for k,v in normalized.items() if k not in transport_keys}!=
                    {k:v for k,v in target.items() if k not in transport_keys}

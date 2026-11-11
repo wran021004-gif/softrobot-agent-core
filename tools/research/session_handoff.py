@@ -708,17 +708,25 @@ def trusted_history(host,agent,*,initial_messages=None,files=None,preparation=No
         send=sends[0];row=host.store.lookup(host.run_id,send['request_id']);reception=received(host,send['request_id'])
         repaired=any(e['kind']=='implementation_binding' and e['sequence']>send['sequence'] for e in events)
         error_code=(json.loads(host.store.artifact(reception['body'],raw=True)).get('error',{}).get('code')
-            if reception and reception['http_status']==400 else None)
+            if reception and reception['http_status'] in (400,429) else None)
         rejected_schema=bool(repaired and reception and reception['http_status']==400
             and error_code=='invalid_function_parameters')
-        rejected_transport=error_code=='unsupported_parameter' and not any(
+        rejected_transport=bool(reception and reception['http_status']==400 and error_code=='unsupported_parameter') and not any(
             e['sequence']>send['sequence'] and e['kind'] in ('model_original_tool_request',
                 'model_original_tool_feedback','original_research_plan','candidate_constructed',
                 'candidate_analysis','physical_replay','tool') for e in events)
         connect_failed=not reception and any(e['kind']=='r3_boundary_failure'
             and host.store.artifact(e['outputs'][0])==dict(exception_type='ConnectError',request_id=send['request_id'],response_saved=False)
             for e in events)
-        if row and row['receipt'] and (rejected_schema or rejected_transport or connect_failed):
+        corrected_quota_rejection=bool(repaired and reception and reception['http_status']==429
+            and error_code=='subscription_sharing_usage_limit_exceeded'
+            and any(e['kind']=='provider_transport_transition' and e['status']=='authorized'
+                    and e['sequence']>send['sequence'] for e in events)
+            and not any(e['sequence']>send['sequence'] and e['kind'] in (
+                'model_original_turn','model_original_tool_request','model_original_tool_feedback',
+                'original_research_plan','candidate_constructed','candidate_analysis','physical_replay','tool')
+                for e in events))
+        if row and row['receipt'] and (rejected_schema or rejected_transport or connect_failed or corrected_quota_rejection):
             receipt=json.loads(row['receipt'])
             wire=host.store.artifact(host.store.artifact(send['outputs'][0])['request'])['messages']
             normalized=[{k:v for k,v in m.items() if k!='tracking_id'} for m in agent.messages]

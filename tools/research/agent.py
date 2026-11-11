@@ -1271,7 +1271,9 @@ async def converse(host,*,session_handoff=None,pause_after_completed_invocations
                 update(host,pilot=pilot)
             preparation=state(host)['pilot'].get('handoff')
             source=(host.store.artifact(host.store.artifact(preparation)['source_state']) if preparation else {})
-            if source.get('pending_authorized_continuation')!=continuation:
+            # An exactly verified initial rejection has no assistant/tool output
+            # to compact. Reuse its durable unsent prompt and retain the charge.
+            if source.get('pending_authorized_continuation')!=continuation and not rejected_initial:
                 with host.store.read_snapshot():
                     current=decision_packet(host,research_only=True)['research']
                 native[0].tool_spec={**native[0].tool_spec,'inputSchema':{'json':plan_schema(current['actions'],
