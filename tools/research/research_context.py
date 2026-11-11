@@ -371,6 +371,10 @@ def context(host, *, evidence_references=None):
         native_best='Read /control_schedule_reference from the completed Native T1/Direct result; use that saved same-candidate/task schedule reference, not the analysis result reference. Select the schedule directly for control optimization, or optionally initialize_control using baseline with source=schedule reference and parent=its candidate. No solve or Replay is needed to copy an already legal sequence; no acceptance is inherited.',
         mathematical_response='response_evidence must be a current verified input_sensitivity analysis; optional channels, trust_radius_n, regularization',
         physical_response='Optional baseline source+parent; channels, difference_step_n, trust_radius_n, regularization, evaluation_requests; one baseline plus one full rollout per channel, charged to shared budget')
+    initialization_methods=s['spec'].get('control_initialization_methods')
+    if initialization_methods is not None:
+        current['control_initialization_methods']={key:value for key,value in current['control_initialization_methods'].items()
+            if (key if key not in ('measured_nmpc','native_best') else 'baseline') in initialization_methods}
     current['control_search_domain']=dict(coefficient_order='knot_index * tendon_count + tendon_index',
         active_coefficients='Optional unique flat indices; inactive coefficients remain zero relative to each start',
         response_cost='baseline per start + active coefficient count probes + one proposal per local response iteration; all share one cap',

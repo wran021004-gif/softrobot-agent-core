@@ -41,6 +41,13 @@ def plan_schema(actions, *, decision_required=False,family_version=None,diagnose
     from tools.research.contracts import Plan, PLAN_PAYLOADS, PLAN_OPTIONAL_PAYLOADS, PLAN_RESEARCH_INTENTS
     family_version=family_version or (study or {}).get('family_space',{}).get('version')
     schema=Plan.model_json_schema()
+    initialization_methods=(study or {}).get('control_initialization_methods')
+    if initialization_methods is not None:
+        seed=schema['$defs']['ControlSeedRequest']
+        seed['properties']['method']['enum']=list(initialization_methods)
+        if 'baseline' not in initialization_methods:
+            seed['properties']['method'].pop('default',None)
+            seed['required'].append('method')
     if 'stop' in actions:
         schema['properties']['interpretation']['description']=schema['properties']['interpretation'].get('description','')+(
             ' For voluntary STOP before independent task acceptance, review evidence_read '

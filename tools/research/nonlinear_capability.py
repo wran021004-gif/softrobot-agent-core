@@ -15,7 +15,16 @@ T1 = 'mujoco-nonlinear-task-capability-v1'
 T2 = 'mujoco-reoptimized-structure-response-v1'
 T1_OPERATION = 'mujoco_nonlinear_task_capability_v1'
 T2_OPERATION = 'mujoco_reoptimized_structure_response_v1'
-METHODS = {T1_OPERATION: T1, T2_OPERATION: T2}
+DIRECT = 'mujoco_direct_control_v1'
+METHODS = {T1_OPERATION: T1, T2_OPERATION: T2, DIRECT: DIRECT}
+
+
+def method_authorized(spec, method):
+    """Explicit null revokes a grant; old frozen Direct scopes retain their meaning."""
+    methods=spec.get('mathematical_methods',{})
+    return bool(methods.get(method, method==DIRECT))
+
+
 LIMITATIONS = [
     'Best found signed J under the recorded algorithm, initialization and budget; no global nonlinear optimum.',
     'Structural secants are finite-budget responses, not gradients or KKT/envelope derivatives.',

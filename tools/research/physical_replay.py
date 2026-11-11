@@ -126,6 +126,9 @@ def initialize_schedule(configuration, source, parent):
 
 def seed_control(host, request, operation_key=None, plan=None):
     """Candidate-owned bounded inputs; explicit ZOH time/channel transfer or pretension."""
+    allowed=state(host)['spec'].get('control_initialization_methods')
+    if allowed is not None and request.method not in allowed:
+        raise ValueError('CONTROL_INITIALIZATION_METHOD_NOT_AUTHORIZED: '+request.method)
     started=time.perf_counter()
     try:
         if request.condition_id is not None:

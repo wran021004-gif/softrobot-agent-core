@@ -365,9 +365,9 @@ def dispatch(host,query,key,*,guard,origin='model',plan_reference=None):
                 not spec.get('mathematical_methods',{}).get('mechanism_structure_v1') or
                 mathematics_authorization(host,current)['registered_study_scope_authorized'] is not True):
             return dict(status='not_applicable',reason='EXPLICIT_V2_FROZEN_MECHANISM_GRANT_AND_SCOPE_REQUIRED',task_acceptance='unmeasured')
-    from tools.research.nonlinear_capability import METHODS, saved_context
+    from tools.research.nonlinear_capability import METHODS, saved_context, method_authorized
     if q.operation in METHODS and ('analysis' not in state(host)['spec']['capabilities'] or
-            not state(host)['spec'].get('mathematical_methods',{}).get(METHODS[q.operation])):
+            not method_authorized(state(host)['spec'],METHODS[q.operation])):
         return dict(status='not_applicable',reason='EXPLICIT_FROZEN_MATHEMATICAL_METHOD_AUTHORIZATION_REQUIRED',task_acceptance='unmeasured')
     if q.control_optimization:
         settings=q.control_optimization.settings

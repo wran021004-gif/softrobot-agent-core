@@ -286,10 +286,21 @@ def resolve(path, profile=None, *, backend_profile=None):
     family_sensitivity=study.pop('family_sensitivity_variables',None)
     methods=study.pop('mathematical_methods',None)
     if methods is not None:
+        from tools.research.nonlinear_capability import DIRECT
         if (not isinstance(methods,dict) or not methods or
-                set(methods)-{'sampled-affine-conic-minimax-v1','controlled-capability-sensitivity-v1','mujoco-nonlinear-task-capability-v1','mujoco-reoptimized-structure-response-v1','mechanism_structure_v1'} or
-                any(not isinstance(v,str) or not v.strip() for v in methods.values())):
+                set(methods)-{'sampled-affine-conic-minimax-v1','controlled-capability-sensitivity-v1','mujoco-nonlinear-task-capability-v1','mujoco-reoptimized-structure-response-v1','mechanism_structure_v1',DIRECT} or
+                any(v is not None and (not isinstance(v,str) or not v.strip()) for v in methods.values())):
             raise ValueError('EXPLICIT_VERSIONED_MATHEMATICAL_METHOD_AUTHORIZATION_REQUIRED')
+        methods.setdefault(DIRECT,'Legacy analysis-authorized Direct control research; independent Replay remains required.')
+    initialization_methods=study.pop('control_initialization_methods',None)
+    if initialization_methods is not None:
+        from typing import get_args
+        from tools.research.contracts import ControlSeedRequest
+        supported=get_args(ControlSeedRequest.model_fields['method'].annotation)
+        if (not isinstance(initialization_methods,list) or not initialization_methods or
+                any(method not in supported for method in initialization_methods) or
+                len(initialization_methods)!=len(set(initialization_methods))):
+            raise ValueError('EXPLICIT_SUPPORTED_CONTROL_INITIALIZATION_METHODS_REQUIRED')
     decisions=study.pop('research_decisions',None)
     readiness=study.pop('tool_readiness',None)
     provenance = dict(root=dict(path=str(path), sha256=digest(study)), references={})
@@ -701,10 +712,11 @@ def resolve(path, profile=None, *, backend_profile=None):
             raise ValueError('EXPLICIT_ENGINEERING_READINESS_REPORT_REQUIRED')
         study['tool_readiness']=dict(sorosim_matlab=report)
     if methods is not None:study['mathematical_methods']=methods
+    if initialization_methods is not None:study['control_initialization_methods']=initialization_methods
     if 'mujoco_control' in study.get('family_search',{}).get('evaluation_modes',[]) and (
             not {'analysis','search','control_correction'}<=set(study['capabilities']) or
             'search' not in study.get('allowed_plan_actions',[]) or not native_limits or
-            'mujoco-nonlinear-task-capability-v1' not in study.get('mathematical_methods',{})):
+            not study.get('mathematical_methods',{}).get('mujoco-nonlinear-task-capability-v1')):
         raise ValueError('NATIVE_FAMILY_SEARCH_REQUIRES_ANALYSIS_CONTROL_T1_AND_LIMITS')
     if first_strategy=='native_search' and 'mujoco_control' not in study.get('family_search',{}).get('evaluation_modes',[]):
         raise ValueError('INITIAL_NATIVE_SEARCH_REQUIRES_NATIVE_FAMILY_SEARCH_GRANT')

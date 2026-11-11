@@ -307,8 +307,9 @@ def mathematical_method_view(host, reference, *, budget_snapshot=None):
                 if r['method']==key]
             methods[key]['repeat_guidance']='Read the original result and state what new information a repeat adds. Reproducibility, numerical checks and changed conditions are legitimate; this hint never vetoes execution. Configuration/request matching alone does not prove identical models, working points or controls.'
     from copy import deepcopy
-    from tools.research.nonlinear_capability import METHODS, T1, T2, LIMITATIONS, candidate_responses
+    from tools.research.nonlinear_capability import METHODS, T1, T2, DIRECT, LIMITATIONS, candidate_responses, method_authorized
     for operation,method in METHODS.items():
+        if operation==DIRECT:continue  # Direct already owns the base row above.
         # Frozen old studies retain their existing catalog and authorization.
         if not spec.get('mathematical_methods',{}).get(method):continue
         item=deepcopy(methods['mujoco_direct_control_v1'])
@@ -363,6 +364,11 @@ def mathematical_method_view(host, reference, *, budget_snapshot=None):
             item['sensitivity_evidence']='Per-sample fixed-control and best-found reoptimized secants when source rollout arrays exist. V2 directions optionally bind validation_coordinates and validation_t1_results excluded from the fitted stencil. Multiple scales share the same baseline; active-time switches and failed prediction checks remain unresolved.'
 
         methods[method]=item
+    if not method_authorized(spec,DIRECT):
+        item=methods[DIRECT]
+        item.update(study_authorized=False,formal_execution_authorized=False,
+            authorized=False,executable=False,execution_status='blocked',planning_status='unauthorized',
+            missing=[*item['missing'],'study_method_grant_required'])
     if mechanism_interface(spec):
         from tools.research.structure_research import METHOD
         item=deepcopy(methods['native_dynamics_v1'])
