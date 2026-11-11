@@ -7,6 +7,7 @@ import builtins
 from contextlib import ExitStack
 from copy import deepcopy
 import hashlib
+import json
 import os
 from pathlib import Path
 from types import SimpleNamespace
@@ -57,6 +58,7 @@ class P3AblationGates(unittest.TestCase):
         cls.source = cls.directory / 'study_p3_passive_progressive_stiffness_autonomous_v1_2.json'
         cls.original_sha = hashlib.sha256(cls.source.read_bytes()).digest()
         cls.full = config.resolve(cls.source)
+        cls.historical_manifest = json.loads((cls.directory.parents[1] / 'docs/research/p3-autonomous-study-v1_2-launch-20261110/knowledge-manifest.json').read_text(encoding='utf-8'))
         cls.groups = {name: config.resolve(cls.directory / ('study_p3_ablation_' + name + '_v1.json'))
                       for name in ('no_math', 'no_knowledge', 'no_interact')}
 
@@ -116,10 +118,14 @@ class P3AblationGates(unittest.TestCase):
             for key in ('provider_requests', 'protected_provider_requests', 'physical_launches',
                         'public_operations', 'local_solves', 'offline_nlp', 'bdf_replays', 'mathematical_evaluations'):
                 self.assertIs(type(spec['budgets'][key]), int)
-            self.assertEqual(spec['budgets']['provider_requests'], 48)
+            self.assertEqual(spec['budgets']['provider_requests'], 200)
             self.assertEqual(spec['budgets']['protected_provider_requests'], 4)
-            self.assertEqual(spec['budgets']['physical_launches'], 32)
-            self.assertEqual(spec['budgets']['mathematical_evaluations'], 0 if name == 'no_math' else 24)
+            self.assertEqual(spec['budgets']['public_operations'], 800)
+            self.assertEqual(spec['configuration']['policy']['budget']['model_calls'], 200)
+            self.assertEqual(spec['configuration']['policy']['budget']['tool_calls'], 800)
+            self.assertEqual(spec['configuration']['policy']['budget']['backend_solves'], 150)
+            self.assertEqual(spec['budgets']['physical_launches'], 150)
+            self.assertEqual(spec['budgets']['mathematical_evaluations'], 0 if name == 'no_math' else 100)
             self.assertEqual(spec['family_search']['max_proposals'], 24)
             self.assertEqual(spec['family_search']['max_evaluations'], 16)
             self.assertTrue(spec['family_search']['coupled_block_enabled'])
@@ -164,6 +170,10 @@ class P3AblationGates(unittest.TestCase):
     def test_no_knowledge_blocks_main_reporter_cache_and_preload(self):
         spec = deepcopy(self.groups['no_knowledge'])
         self.assertEqual(spec['knowledge_manifest']['entries'], [])
+        for name in ('no_math', 'no_interact'):
+            self.assertEqual(self.groups[name]['knowledge_manifest'], self.full['knowledge_manifest'])
+            self.assertEqual(len(self.groups[name]['knowledge_manifest']['entries']), 45)
+            self.assertEqual(self.groups[name]['knowledge_manifest'], self.historical_manifest)
         spec['knowledge_manifest'] = self.full['knowledge_manifest']  # Deliberately stale fixture.
         host = SimpleNamespace(store=Mock())
         current = dict(spec=spec, retrievals=[REF])

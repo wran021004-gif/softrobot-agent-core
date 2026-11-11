@@ -1,0 +1,4 @@
+# Preserve the original Knowledge snapshot bytes across platforms.
+tools/assets/memory/diagnostics/*.json -text whitespace=cr-at-eol
+tools/assets/memory/cases/*.json -text whitespace=cr-at-eol
+tools/assets/memory/knowledge/*.json -text whitespace=cr-at-eol
