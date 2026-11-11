@@ -68,13 +68,16 @@ def scientific_actions(spec):
             interface=spec['research_decisions']['analysis_interface'],available='analysis' in spec.get('capabilities',[]),
             scope='Candidate-registered Native control optimization on the current structure: Reach/Hold T1 or applicable Direct. Conic uses mechanism_research / inspect / reoptimized_task_capability / optimal_task_violation, not this Native control interface. Independent replay establishes acceptance.')]
     if mechanism_interface(spec):
+        from tools.research.structure_research import allowed_operations
         actions.append(dict(scientific_goal='mechanism_research',domain='structure',tool='research_analysis',
-            interface=spec['research_decisions']['analysis_interface'],available='analysis' in spec.get('capabilities',[]),
+            interface=spec['research_decisions']['analysis_interface'],available='analysis' in spec.get('capabilities',[]) and bool(allowed_operations(spec)),
             scope='inspect / differentiate / optimize / compare mechanisms, qualified passive equilibrium, registered finite-time response and explicit M1/M2 evidence. Main owns target, direction and adoption.'))
     if spec['research_decisions']['analysis_interface']=='scientific_question_v4':
         actions=[row for row in actions if row['scientific_goal']!='single_parameter_effect']
     for row in actions:
-        if spec.get('canonical_task',{}).get('physical_problem') and row['scientific_goal']!='mechanism_research':
+        if spec.get('canonical_task',{}).get('physical_problem') and row.get('action')=='search':
+            row['scope']='Ordinary passive FamilySearch; complete task response remains available independently of optional mechanism analysis.'
+        elif spec.get('canonical_task',{}).get('physical_problem') and row['scientific_goal']!='mechanism_research':
             row.update(available=False,scope='This frozen passive assembly has no active control; use mechanism_research. Independent passive Replay is available through research_plan only for a registered dynamic task.')
         elif spec.get('canonical_task',{}).get('physical_problem'):
             row['scope']='Inspect, differentiate, optimize or compare frozen geometry/equilibrium and complete finite_time_task_response. The latter uses finite_time_task_violation over all loads/windows, qualification gates and any required paired intervention; Main owns structure adoption.'
@@ -136,6 +139,13 @@ def question_contract(spec):
 
 def question_schema(spec, candidate=None, action=None, *, control_methods=None):
     schema=question_contract(spec).model_json_schema()
+    from tools.research.structure_research import allowed_operations
+    for name in ('ScientificStructureV4','MechanismQuestionV2','MechanismStudy'):
+        definition=schema.get('$defs',{}).get(name)
+        if definition and 'operation' in definition.get('properties',{}):
+            operations=allowed_operations(spec)
+            if operations:definition['properties']['operation']['enum']=operations
+            else:definition['not']={}
     if question_contract(spec) is ScientificQuestionV4:
         # Reuse the two existing scientific payloads, with a single outer version.
         for name in ('ScientificStructureV4','ScientificControlV4'):
@@ -920,6 +930,8 @@ def compile_mechanism(host, payload, *, tool_use_id,v4=False):
         return dict(status=status,reason=reason,question=plain(q),scientific_execution_started=False,**extra)
     s=state(host);spec=s['spec']
     if protected(host) or s['research_status']=='stopped':return feedback('blocked','ORIGINAL_PROTECTED_CLOSEOUT_OR_STOP')
+    from tools.research.structure_research import allowed_operations
+    if q.operation not in allowed_operations(spec):return feedback('not_applicable','MECHANISM_OPERATION_NOT_AUTHORIZED')
     intent=completed_question_plan(host)
     if not intent:return feedback('needs_prerequisite','COMPLETED_CANDIDATE_BOUND_DIAGNOSE_REQUIRED',
         preparation=dict(tool='research_plan',action='diagnose',fields=['hypothesis','decision.selected_candidate']))

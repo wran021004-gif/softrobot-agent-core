@@ -62,7 +62,7 @@ def compile_search(host, value, request_id):
     grant=spec['family_search'];space=spec['family_space'];issues=[]
     def issue(field,reason,**extra):issues.append(dict(field='search.'+field,reason=reason,**extra))
     if q.execution_profile and q.evaluation_model!='passive_task_response':raise ValueError('EXECUTION_PROFILE_REQUIRES_BASELINE_RESPONSE')
-    if q.evaluation_model=='passive_task_response' and spec['canonical_task']['goal']['data'].get('version')=='passive_response_v2' and q.execution_profile is None:
+    if q.evaluation_model=='passive_task_response' and spec['budgets']['physical_launches'] is None and spec['canonical_task']['goal']['data'].get('version')=='passive_response_v2' and q.execution_profile is None:
         raise StructureChoiceError([dict(field='search.execution_profile',reason='Main must choose exploration scope or the full final protocol explicitly')])
     groups=q.design_variable_groups
     if q.span_strategies and not set(q.span_strategies)<=set(span_strategies(space)):
@@ -139,9 +139,8 @@ def compile_search(host, value, request_id):
             'selected_method':'bounded_mixed_coordinate_v1',
             'requested_budget':q.structure_search_effort.max_evaluations}}
     compiled=plain(Plan.model_validate(compiled))
-    from tools.research.search import search_problem
-    from tools.research.analysis import admission
-    try:problem=search_problem(host,compiled['search'],admission(host,q.structure_search_effort.max_evaluations)['admitted'])
+    from tools.research.search import search_problem,search_admission
+    try:problem=search_problem(host,compiled['search'],search_admission(host,compiled['search'],q.structure_search_effort.max_evaluations)['admitted'])
     except ValueError as exc:
         if not str(exc).startswith('SEARCH_SEED_NOT_REPRESENTABLE_USE_GENERATE'):raise
         raise StructureChoiceError([dict(field='decision.selected_candidate',reason=str(exc),

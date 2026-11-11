@@ -359,6 +359,9 @@ def dispatch(host,query,key,*,guard,origin='model',plan_reference=None):
     guard(host,origin!='engineering_preflight')
     if q.mechanism_study:
         from tools.research.scientific_intent import mechanism_interface
+        from tools.research.structure_research import allowed_operations
+        if q.mechanism_study.operation not in allowed_operations(state(host)['spec']):
+            return dict(status='not_applicable',reason='MECHANISM_OPERATION_NOT_AUTHORIZED',task_acceptance='unmeasured')
         from tools.research.research_context import mathematics_authorization
         current=state(host);spec=current['spec']
         if (not mechanism_interface(spec) or

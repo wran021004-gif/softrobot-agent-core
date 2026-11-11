@@ -9,6 +9,12 @@ from extensions.math_analysis.differentiation_router import differentiate, stenc
 
 METHOD='mechanism_structure_v1'
 OPERATIONS=('inspect','differentiate','optimize','compare','interact')
+
+
+def allowed_operations(spec):
+    return list(spec.get('mechanism_operations',OPERATIONS)) if spec.get('mathematical_methods',{}).get(METHOD) else []
+
+
 SCALAR_DIRECTION_TARGETS=('mass_balance_residual','total_mass','body_inertia_trace',
     'directional_tendon_row_residual','motion_decoupling','finite_time_task_violation')
 
@@ -289,6 +295,7 @@ def discovery(spec, candidate, reference, *, latest_direction=None, formal_candi
         ('unauthorized','unsupported','insufficient_budget','blocked') else None)
     operations={}
     for operation,count in minimum.items():
+        if operation not in allowed_operations(spec):continue
         reason=unavailable or ('no_effective_authorized_continuous_parameter' if count is None else
             'insufficient_budget' if remaining_evaluations is not None and remaining_evaluations<count else None)
         ready=bool(detail and not reason)
@@ -296,7 +303,7 @@ def discovery(spec, candidate, reference, *, latest_direction=None, formal_candi
             'conditional_on_original_request_admission' if ready else 'not_checked',reason=reason,
             minimum_evaluations=count,inputs_required=True)
     from tools.research.math_capability_catalog import research_semantics
-    return dict(version='structure_mechanism_discovery_v2',candidate=reference,operations=list(OPERATIONS),
+    return dict(version='structure_mechanism_discovery_v2',candidate=reference,operations=allowed_operations(spec),
         research_semantics=research_semantics(),
         **(dict(execution_checks=dict(default='full',screening=dict(operation='inspect',
             effect_semantics='finite_time_task_response',route_sampling='score_grid',

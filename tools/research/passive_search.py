@@ -5,12 +5,21 @@ from tools.platform_store import plain
 from tools.research.state import state
 
 
+def physical_response_search(spec, query):
+    """Finite physical budgets use the existing complete passive Replay adapter."""
+    return (getattr(query,'version',None)=='family_mixed_search_v1' and query.evaluation_mode=='passive_task_response' and
+        spec['budgets']['physical_launches'] is not None)
+
+
 def problem(spec, query):
     cfg=spec['configuration'];physical=cfg['task'].get('physical_problem')
     if not physical or physical['mode']!='passive_unilateral_equilibrium':
         raise ValueError('PASSIVE_SEARCH_REQUIRES_FROZEN_UNILATERAL_PROBLEM')
-    if not spec.get('mathematical_methods',{}).get('mechanism_structure_v1'):
+    physical_only=physical_response_search(spec,query)
+    if not physical_only and not spec.get('mathematical_methods',{}).get('mechanism_structure_v1'):
         raise ValueError('PASSIVE_SEARCH_REQUIRES_REGISTERED_MECHANISM_GRANT')
+    if physical_only and query.execution_profile is not None:
+        raise ValueError('PHYSICAL_SEARCH_REQUIRES_FROZEN_COMPLETE_PROTOCOL_WITHOUT_PROFILE_OVERRIDE')
     if query.evaluation_mode=='passive_task_response':
         if query.objective!='task_violation':raise ValueError('COMPLETE_PASSIVE_RESPONSE_REQUIRES_TASK_OBJECTIVE')
         from tools.research.structure_research import finite_time_discovery
@@ -70,6 +79,8 @@ def evaluate(host, query, proposal, operation, persist, guard):
     """Persist per-load references before continuing; no hidden replay or control input."""
     from tools.research.analysis import dispatch
     spec=state(host)['spec'];binding=problem(spec,query)
+    if physical_response_search(spec,query):
+        return evaluate_physical(host,query,proposal,operation,persist)
     records=proposal.setdefault('passive_conditions',{})
     for index,condition in enumerate(binding['conditions']):
         record=records.setdefault(condition,{})
@@ -111,3 +122,25 @@ def evaluate(host, query, proposal, operation, persist, guard):
         mathematical_numerical_s=sum(r.get('charged_numerical_s',0.) for r in records.values()),
         limitations=['Finite local search does not establish global infeasibility or optimum.',
             'Hard static equilibrium and full native soft-limit dynamics are distinct models.'])
+
+
+def evaluate_physical(host, query, proposal, operation, persist):
+    """Reuse registered physics and frozen diagnostic bounds, without optional math."""
+    from tools.research.physical_replay import dispatch
+    from tools.research.contracts import PhysicalReplayRequest
+    if 'physical_response' not in proposal:
+        output=dispatch(host,PhysicalReplayRequest(candidate=proposal['candidate']),operation+':response',role='search')
+        proposal['physical_response']=output['reference'];persist()
+    reference=proposal['physical_response'];raw=host.store.artifact(reference)
+    gap=raw.get('diagnostic_task_gap',{})
+    rows=[r for r in gap.get('constraints',[]) if r.get('signal')!='paired_mechanism']
+    complete=bool(rows) and raw.get('status')=='evaluated' and all(
+        r.get('observed_value') is not None and r.get('passed') is not None for r in rows)
+    values=[r['normalized_violation'] if r.get('normalized_violation') is not None else
+        0. if r['passed'] else 1. for r in rows] if complete else []
+    return dict(kind='passive_task_response',computation_status='computed' if complete else 'unresolved',
+        proxy_values={query.objective:max(values)} if values else {},task_acceptance='unmeasured',
+        evidence=dict(candidate=proposal['candidate'],physical_response=reference,diagnostic_task_gap=gap,
+            conditions=dict(all_frozen_conditions=dict(physical_response=reference,status=raw.get('status')))),
+        actual_mathematical_evaluations=0,mathematical_numerical_s=0.,
+        score_semantics='Frozen numerical bound violations, including contact and tendon checks; paired causal proof and formal certification excluded. Not task acceptance.')

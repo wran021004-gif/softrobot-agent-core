@@ -762,8 +762,8 @@ def _dispatch(host, value, request_id, origin='model'):
     if plan.action=='select':
         admission=dict(scope='selection without execution or numerical reservation')
     elif plan.action=='search' and getattr(plan.search,'evaluation_mode','mathematical_proxy') in ('mathematical_proxy','mujoco_control','passive_equilibrium','passive_task_response'):
-        from tools.research.analysis import admission as mathematical_admission
-        admission=mathematical_admission(host,plan.search.max_evaluations)
+        from tools.research.search import search_admission
+        admission=search_admission(host,plan.search,plan.search.max_evaluations)
     else:
         from tools.research.feedback import result_view
         route='nmpc'

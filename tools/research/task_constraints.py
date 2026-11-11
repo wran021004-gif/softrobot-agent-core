@@ -401,6 +401,8 @@ def mathematical_method_view(host, reference, *, budget_snapshot=None):
             item['planning_status']='unauthorized';item['execution_status']='blocked'
             item['missing']=[*item['missing'],'explicit_frozen_mechanism_method_grant_required']
         methods[METHOD]=item
+        from tools.research.structure_research import allowed_operations
+        item['allowed_operations']=allowed_operations(spec)
         item['task_conditioned_query']=dict(reference=reference,view='mathematical_capabilities',pointer='/structure_research/task_conditioned_view')
         methods['native_dynamics_v1']['frontend_role']='internal_mechanism_source'
         item['internal_mechanics_query']=methods['native_dynamics_v1']['detail_query']

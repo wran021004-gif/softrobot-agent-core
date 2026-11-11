@@ -57,7 +57,8 @@ RESULT_KEYS=('results','physical_replays','mechanics_results','analysis_results'
 
 
 def _knowledge_receipt(host, query):
-    from tools.research.experience import retrieve
+    from tools.research.experience import retrieve,knowledge_enabled
+    if not knowledge_enabled(state(host)['spec']):raise ValueError('KNOWLEDGE_DISABLED_BY_FROZEN_STUDY')
     if query.get('operation')=='read' and state(host)['spec'].get('knowledge',{}).get('organization')=='typed_knowledge_v1':
         for ref in reversed(state(host).get('retrievals',[])):
             receipt=host.store.artifact(ref);old=receipt['query']

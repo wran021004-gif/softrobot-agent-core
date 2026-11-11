@@ -142,7 +142,9 @@ def plan_schema(actions, *, decision_required=False,family_version=None,diagnose
             if branch.get('type')=='string':branch['enum']=applicable_spans
         properties['design_variable_groups']['items']['enum']=[g for g in grant['variable_groups'] if g!='control']
         modes=grant.get('evaluation_modes',[])
-        if 'passive_task_response' in modes and study['canonical_task']['goal']['data'].get('version')=='passive_response_v2':
+        if not study.get('mathematical_methods',{}).get('mechanism_structure_v1'):
+            modes=[mode for mode in modes if mode!='passive_equilibrium']
+        if 'passive_task_response' in modes and study['budgets']['physical_launches'] is None and study['canonical_task']['goal']['data'].get('version')=='passive_response_v2':
             intent_schema.setdefault('allOf',[]).append({'if':{'properties':{'evaluation_model':{'const':'passive_task_response'}},'required':['evaluation_model']},
                 'then':{'required':['execution_profile'],'properties':{'execution_profile':{'type':'object'}}}})
         if modes and all(m.startswith('passive_') for m in modes):
@@ -170,7 +172,8 @@ def plan_schema(actions, *, decision_required=False,family_version=None,diagnose
             decision['properties'].pop('selected_method')
             decision['properties'].pop('requested_budget')
             decision['required']=[k for k in decision['required'] if k not in ('selected_method','requested_budget')]
-    if (study or {}).get('family_search',{}).get('coupled_block_enabled') and 'search' in actions:
+    from tools.research.structure_research import allowed_operations
+    if (study or {}).get('family_search',{}).get('coupled_block_enabled') and 'search' in actions and 'interact' in allowed_operations(study or {}):
         schema['properties']['search']['anyOf'].insert(0,{'$ref':'#/$defs/FamilyMixedSearchV2'})
         schema['$defs']['FamilyMixedSearchV2']['description']='Four matched local interaction points only: baseline, A, B, A+B. No optimize operation or iterative evaluation budget. Use a new Plan for further exploration.'
         if (study or {}).get('canonical_task',{}).get('goal',{}).get('data',{}).get('version')=='passive_response_v2':
@@ -462,6 +465,10 @@ def selected_analysis_schema(method, detail, *, bound=False):
     from tools.research.contracts import AnalysisRequest
     from tools.research.optimal_capability import CONIC,SENSITIVITY
     schema=AnalysisRequest.model_json_schema();operation=detail['operation']
+    if 'allowed_operations' in detail:
+        if detail['allowed_operations']:
+            schema['$defs']['MechanismStudy']['properties']['operation']['enum']=detail['allowed_operations']
+        else:schema['$defs']['MechanismStudy']['not']={}
     common={'candidate','operation','model_source','operating_point','saved_state','execution','update_id','protocol','scoring_window_s'}
     extra={
         'mechanism_structure_v1':{'native','mechanism_study'},

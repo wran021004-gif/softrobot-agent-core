@@ -90,6 +90,18 @@ def search_problem(host,query,count):
     return dict(query=plain(q),max_evaluations=count,profile=s['profile']['identity'],configuration_identity=s['spec']['resolved_identity'],layout=layout)
 
 
+def search_admission(host, query, requested):
+    from tools.research.passive_search import physical_response_search
+    from tools.research.analysis import admission
+    from tools.research.budget import capacity
+    q=parse_search(query);spec=state(host)['spec']
+    if physical_response_search(spec,q):
+        episodes=len(spec['configuration']['task']['goal']['data']['load_conditions'])
+        result=capacity(host,requested*episodes,route='passive_protocol')
+        return {**result,'admitted':result['admitted']//episodes,'unit':'complete_passive_structure_response'}
+    return admission(host,requested)
+
+
 def parse_search(query):
     raw=plain(query)
     contract={'family_mixed_search_v1':FamilyMixedSearch,'family_mixed_search_v2':FamilyMixedSearchV2}.get(raw.get('version'),Search)
@@ -139,6 +151,8 @@ def coupled_problem(host, query, count):
     if min([count,*[grant[k] for k in ('max_proposals','max_evaluations') if grant[k] is not None]])<4:raise ValueError('ALL_FOUR_MATCHED_POINTS_MUST_FIT_ALLOWANCE')
     if query.evaluation_mode not in grant.get('evaluation_modes',['mathematical_proxy']):raise ValueError('SEARCH_MODE_OUTSIDE_FROZEN_GRANT')
     if not spec.get('mathematical_methods',{}).get(METHOD):raise ValueError('ORIGINAL_MECHANISM_METHOD_GRANT_REQUIRED')
+    from tools.research.structure_research import allowed_operations
+    if 'interact' not in allowed_operations(spec):raise ValueError('MECHANISM_OPERATION_NOT_AUTHORIZED: interact')
     if q.effect_semantics not in ('mechanism_effect','re_equilibrated_passive_response','finite_time_task_response'):
         raise ValueError('MATCHED_INTERACTION_BACKEND_UNAVAILABLE_FOR_EFFECT: '+q.effect_semantics)
     if q.requested_budget not in (None,4):raise ValueError('COUPLED_BLOCK_REQUIRES_EXACTLY_FOUR_EVALUATIONS')
@@ -238,7 +252,8 @@ def request_guidance(spec):
         analysis=dict(tool='research_analysis',operation='task_capability',candidate='existing owned candidate required',
             capability_method='sampled-affine-conic-minimax-v1',protocol='exact frozen analysis_protocol'),
         scope='All actions retain Plan hypothesis/decision obligations. Numerical failure is unknown; no proxy establishes independent physical acceptance.')
-    if grant.get('coupled_block_enabled') is True:
+    from tools.research.structure_research import allowed_operations
+    if grant.get('coupled_block_enabled') is True and 'interact' in allowed_operations(spec):
         guidance['coupled_block']=dict(version='family_mixed_search_v2',method='bounded_coupled_block_v1',
             family_space_identity=spec['family_space_identity'],max_evaluations=4,
             required=['previous_candidate_ref','analysis'],
@@ -291,6 +306,10 @@ def request_guidance(spec):
             loads=[r['name'] for r in spec['configuration']['task']['physical_problem']['loads']],
             diagnostic_load_conditions='Optional static subset, explicitly diagnostic. Full finite-time evaluation always retains every frozen condition.'),
             initialization='An explicit decision.selected_candidate strictly seeds its representable structure; station-dependent sections or unsupported routes are rejected without projection. Omit that seed for a fresh family-default search center and retain current science in supporting_evidence. Main chooses starts and finite bounds; the same design/payout applies across loads, with no active inputs or historical solution seeds.')
+        if spec['budgets']['physical_launches'] is not None:
+            guidance['search']['passive']['execution_profile']='Omit: finite physical budgets use the complete frozen physical protocol; no profile overrides.'
+        if not spec.get('mathematical_methods',{}).get('mechanism_structure_v1'):
+            guidance['search']['passive']['evaluation_models']=[m for m in guidance['search']['passive']['evaluation_models'] if m!='passive_equilibrium']
         space=spec['family_space'];segment=space['segment_domain']
         # Present the frozen fields used by mixed_moves/search_domains. Search
         # groups differ from the ordinary parameter-category navigation labels.
@@ -418,6 +437,9 @@ def run_search(host,query,key,*,guard,execute,capacity):
     passive=not coupled and mixed and q.evaluation_mode.startswith('passive_')
     mathematical=mixed or q.evaluation_mode=='mathematical_proxy'
     s=state(host)
+    from tools.research.passive_search import physical_response_search
+    physical_response=passive and physical_response_search(s['spec'],q)
+    if physical_response:mathematical=False
     per_evaluation=4 if coupled else 1
     if native:
         per_evaluation=len(s['spec'].get('task_conditions',[])) or 1
@@ -428,7 +450,7 @@ def run_search(host,query,key,*,guard,execute,capacity):
         from tools.research.optimal_capability import conic_subproblems
         from tools.research.task_constraints import describe_analysis_requirements
         per_evaluation=1+conic_subproblems(describe_analysis_requirements(s['base_configuration'],{}))
-    fit=admission(host,q.max_evaluations) if mathematical else capacity(host,q.max_evaluations)
+    fit=search_admission(host,q,q.max_evaluations) if physical_response else admission(host,q.max_evaluations) if mathematical else capacity(host,q.max_evaluations)
     identity=digest(dict(query=plain(q),profile=s['profile']['identity'],configuration_identity=s['spec']['resolved_identity']))
     owner=s.get('search_bindings',{}).get(identity,key)
     checkpoint=s['searches'].get(owner)
@@ -485,6 +507,9 @@ def run_search(host,query,key,*,guard,execute,capacity):
                 break
             if mathematical and admission(host,per_evaluation)['admitted']<per_evaluation:
                 checkpoint['termination']='study_mathematical_budget_exhausted'
+                break
+            if physical_response and search_admission(host,q,1)['admitted']<1:
+                checkpoint['termination']='study_physical_budget_exhausted'
                 break
             if checkpoint['step']<q.minimum_step:
                 checkpoint['termination']='minimum_coordinate_step'

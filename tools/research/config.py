@@ -302,6 +302,13 @@ def resolve(path, profile=None, *, backend_profile=None):
                 len(initialization_methods)!=len(set(initialization_methods))):
             raise ValueError('EXPLICIT_SUPPORTED_CONTROL_INITIALIZATION_METHODS_REQUIRED')
     decisions=study.pop('research_decisions',None)
+    mechanism_operations=study.pop('mechanism_operations',None)
+    if mechanism_operations is not None:
+        from tools.research.structure_research import OPERATIONS
+        if (not isinstance(mechanism_operations,list) or not mechanism_operations or
+                any(operation not in OPERATIONS for operation in mechanism_operations) or
+                len(mechanism_operations)!=len(set(mechanism_operations))):
+            raise ValueError('EXPLICIT_SUPPORTED_MECHANISM_OPERATIONS_REQUIRED')
     readiness=study.pop('tool_readiness',None)
     provenance = dict(root=dict(path=str(path), sha256=digest(study)), references={})
     if isinstance(knowledge,str):
@@ -713,6 +720,7 @@ def resolve(path, profile=None, *, backend_profile=None):
         study['tool_readiness']=dict(sorosim_matlab=report)
     if methods is not None:study['mathematical_methods']=methods
     if initialization_methods is not None:study['control_initialization_methods']=initialization_methods
+    if mechanism_operations is not None:study['mechanism_operations']=mechanism_operations
     if 'mujoco_control' in study.get('family_search',{}).get('evaluation_modes',[]) and (
             not {'analysis','search','control_correction'}<=set(study['capabilities']) or
             'search' not in study.get('allowed_plan_actions',[]) or not native_limits or
