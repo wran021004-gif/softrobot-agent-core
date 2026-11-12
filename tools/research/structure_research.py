@@ -403,7 +403,7 @@ class EvaluationLimit(ValueError):
     pass
 
 
-def calculate(configuration, binding, query, point, context, *, checkpoint=None):
+def model_evaluator(configuration, binding, query, point, context, *, checkpoint=None):
     from extensions.tendon_family.mujoco_analysis import NativeModel
     from tools.research.design import family_configuration, set_parameter
     from tools.platform_tasks import compile_input
@@ -418,7 +418,7 @@ def calculate(configuration, binding, query, point, context, *, checkpoint=None)
     dynamic=study.effect_semantics=='finite_time_task_response'
 
     def bind_matching_conditions(record):
-        if study.operation!='interact':return
+        if study.operation!='interact' and not context.get('match_parameters'):return
         from tools.state_io import digest
         fixed=resolved_request(context['space'],record['parameters'] or context['parameters'])
         for row,value in zip(rows,base_values):set_parameter(fixed,row['parameter_id'],value)
@@ -441,7 +441,7 @@ def calculate(configuration, binding, query, point, context, *, checkpoint=None)
         key=tuple(values) if comparison is None else ('comparison',)
         if key in cache:return cache[key]
         if attempts>=context['evaluations']:raise EvaluationLimit('MECHANISM_LOCAL_EVALUATION_CAP')
-        index=attempts;attempts+=1
+        index=attempts;attempts+=1;evaluate.attempts=attempts
         if checkpoint:checkpoint('mechanism_attempt_'+str(index),dict(index=index,parameter_values=values))
         cfg=configuration;params=None
         if values!=base_values:
@@ -542,7 +542,7 @@ def calculate(configuration, binding, query, point, context, *, checkpoint=None)
             seed=None
             if not original and records and records[0]['mechanics']['equilibrium'] is not None and native.physics['dofs']==models[0].physics['dofs']:
                 seed=[records[0]['mechanics'][k]['equilibrium']['qpos'] for k in ('baseline_equilibrium','equilibrium')]
-            qualification_only=(study.operation=='inspect' and study.target.quantity=='constraint_active_set'
+            qualification_only=(study.operation in ('inspect','model_evaluate') and study.target.quantity=='constraint_active_set'
                 and study.load_condition==native.problem.baseline_load)
             mechanics=constrained_mechanics(native,study.load_condition,getattr(study.target,'material_s',.5),seed,
                 study.target.direction_world if study.target.quantity=='directional_material_response' else None,
@@ -583,6 +583,54 @@ def calculate(configuration, binding, query, point, context, *, checkpoint=None)
         if observation['status']!='computed':raise ValueError(observation['reason'])
         return record
 
+    evaluate.attempts=0
+    return evaluate,records,models,failures,mappings,base_values
+
+
+def validate_sensitivity(row,base,records,models,response,study,method_selection,*,first=1):
+    """Shared physical/branch validity checks; never converts an invalid secant into a gradient."""
+    passive=bool(base['configuration']['task'].get('physical_problem'))
+    dynamic=study.effect_semantics=='finite_time_task_response'
+    if method_selection['method']=='passive_kkt_implicit' and response['consistency']['passed']:
+        from extensions.math_analysis.differentiation_router import re_equilibrated
+        response['implicit_sensitivity']=re_equilibrated(row,base,records,models,response,study)
+    if dynamic:
+        active=lambda record:{r['constraint_id'] for r in record['observation']['task_gap']['dominant_constraints']}
+        switch=any(active(record)!=active(base) for record in records[first:])
+        gate_switch=any(record['observation']['task_gap']['hard_gate_status']!=base['observation']['task_gap']['hard_gate_status'] for record in records[first:])
+        response.update(direction_status='directional_comparison',maximum_constraint_switch=switch,strict_derivative=False)
+        if switch or gate_switch:
+            response.update(suggested_delta=None,selected_record_index=None,
+                derivative_status='discontinuous_hard_gate' if gate_switch else 'nonsmooth_maximum_switch')
+            response['consistency'].update(passed=False,reason='HARD_GATE_SWITCH' if gate_switch else 'NONSMOOTH_MAXIMUM_CONSTRAINT_SWITCH')
+    if passive and not dynamic:
+        branch=base['mechanics']['equilibrium']['equilibrium']
+        changed=any(r['mechanics']['equilibrium']['equilibrium'][key]!=branch[key]
+            for r in records[first:] for key in ('active','positive'))
+        qualified=all(r['mechanics']['constraint_state']['qualified'] for r in [base,*records[first:]])
+        smooth=all(r['mechanics']['constraint_state']['status']=='smooth_fixed_active_set' for r in [base,*records[first:]])
+        response['branch_status']='active_set_switch' if changed else 'unqualified' if not qualified else 'nonsmooth_or_degenerate' if not smooth else 'same_active_set'
+        if changed or not qualified or not smooth:
+            from extensions.math_analysis.differentiation_router import withhold_gradient
+            withhold_gradient(response,response['branch_status'])
+    response.update(parameter_path=row['parameter_id'],parameter_unit=row['unit'],
+        model_effect_observed=any(r['compiled_physical_changes'] for r in records[first:]))
+    if not response['model_effect_observed']:
+        response.update(direction_status='unresolved',suggested_delta=None,selected_record_index=None)
+        if dynamic:response['derivative_status']='no_observed_physical_effect'
+        response['consistency']['passed']=False
+    return response
+
+
+def calculate(configuration, binding, query, point, context, *, checkpoint=None):
+    from extensions.tendon_family.family_space import parse_build
+    configuration=context.get('execution_configuration',configuration)
+    started=time.perf_counter();study=query.mechanism_study
+    evaluate,records,models,failures,mappings,base_values=model_evaluator(
+        configuration,binding,query,point,context,checkpoint=checkpoint)
+    rows=context['selected_parameters'];center=np.asarray([m['origin'] for m in mappings])
+    passive=bool(configuration['task'].get('physical_problem'))
+    dynamic=study.effect_semantics=='finite_time_task_response'
     def at_normalized(z):return evaluate([physical_value(m,float(v)) for m,v in zip(mappings,z)])
 
     result=dict(status='computed',operation=METHOD,binding=binding,protocol=plain(query.protocol),
@@ -667,34 +715,7 @@ def calculate(configuration, binding, query, point, context, *, checkpoint=None)
                     values=list(base_values);values[i]=value
                     return evaluate(values)
                 response=differentiate(row,base,probe,goal=study.target.goal,allow_ineligible=dynamic or passive)
-                if evidence['method_selection']['method']=='passive_kkt_implicit' and response['consistency']['passed']:
-                    from extensions.math_analysis.differentiation_router import re_equilibrated
-                    response['implicit_sensitivity']=re_equilibrated(row,base,records,models,response,study)
-                if dynamic:
-                    active=lambda record:{r['constraint_id'] for r in record['observation']['task_gap']['dominant_constraints']}
-                    switch=any(active(record)!=active(base) for record in records[first:])
-                    gate_switch=any(record['observation']['task_gap']['hard_gate_status']!=base['observation']['task_gap']['hard_gate_status'] for record in records[first:])
-                    response.update(direction_status='directional_comparison',maximum_constraint_switch=switch,strict_derivative=False)
-                    if switch or gate_switch:
-                        response.update(suggested_delta=None,selected_record_index=None,
-                            derivative_status='discontinuous_hard_gate' if gate_switch else 'nonsmooth_maximum_switch')
-                        response['consistency'].update(passed=False,reason='HARD_GATE_SWITCH' if gate_switch else 'NONSMOOTH_MAXIMUM_CONSTRAINT_SWITCH')
-                if passive and not dynamic:
-                    branch=base['mechanics']['equilibrium']['equilibrium']
-                    changed=any(r['mechanics']['equilibrium']['equilibrium'][key]!=branch[key]
-                        for r in records[first:] for key in ('active','positive'))
-                    qualified=all(r['mechanics']['constraint_state']['qualified'] for r in [base,*records[first:]])
-                    smooth=all(r['mechanics']['constraint_state']['status']=='smooth_fixed_active_set' for r in [base,*records[first:]])
-                    response['branch_status']='active_set_switch' if changed else 'unqualified' if not qualified else 'nonsmooth_or_degenerate' if not smooth else 'same_active_set'
-                    if changed or not qualified or not smooth:
-                        from extensions.math_analysis.differentiation_router import withhold_gradient
-                        withhold_gradient(response,response['branch_status'])
-                response.update(parameter_path=row['parameter_id'],parameter_unit=row['unit'],
-                    model_effect_observed=any(r['compiled_physical_changes'] for r in records[first:]))
-                if not response['model_effect_observed']:
-                    response.update(direction_status='unresolved',suggested_delta=None,selected_record_index=None)
-                    if dynamic:response['derivative_status']='no_observed_physical_effect'
-                    response['consistency']['passed']=False
+                validate_sensitivity(row,base,records,models,response,study,evidence['method_selection'],first=first)
                 responses.append(response)
             evidence['parameter_sensitivities']=responses
             # Retain the original single-path result layout for existing readers.
@@ -719,7 +740,7 @@ def calculate(configuration, binding, query, point, context, *, checkpoint=None)
                     except EvaluationLimit:raise
                     except ValueError as exc:
                         failures.append(dict(normalized_parameters=list(map(float,z)),reason=str(exc)));return float('inf')
-                remaining=context['evaluations']-attempts
+                remaining=context['evaluations']-evaluate.attempts
                 try:
                     solved=minimize(objective,center,method='Powell',bounds=bounds,
                         options=dict(maxfev=max(1,remaining),maxiter=16,xtol=1e-4,ftol=1e-8))
@@ -780,7 +801,7 @@ def calculate(configuration, binding, query, point, context, *, checkpoint=None)
     except ValueError as exc:
         incomplete=dynamic and records and records[-1]['observation']['status']!='computed'
         result.update(status='execution_incomplete' if incomplete else 'not_applicable',reason=str(exc))
-        evidence['failure']=dict(reason=str(exc),attempted_evaluations=attempts)
+        evidence['failure']=dict(reason=str(exc),attempted_evaluations=evaluate.attempts)
     if study.operation=='interact':
         evidence['interaction']=interaction_evidence(matched_points(rows),records)
         if dynamic and any(r['observation']['value'] is None for r in records):
@@ -813,7 +834,7 @@ def calculate(configuration, binding, query, point, context, *, checkpoint=None)
         evidence.setdefault('derivative_status','discontinuous_hard_gate' if gate_switch else 'nonsmooth_maximum_switch' if switch else
             [r['derivative_status'] for r in evidence.get('parameter_sensitivities',[])] or 'not_requested')
     cost={key:sum(m.cost[key] for m in models) for key in (models[0].cost if models else [])}
-    cost.update(evaluation_attempts=attempts,kernel_wall_s=time.perf_counter()-started)
+    cost.update(evaluation_attempts=evaluate.attempts,kernel_wall_s=time.perf_counter()-started)
     evidence.update(cost=cost,invalid_local_probes=failures)
     evidence['method_selection'].update(actual_cost=cost,working_point=evidence['reference_semantics'],
         parameter=study.paths,evidence_source='/structure_research/records',

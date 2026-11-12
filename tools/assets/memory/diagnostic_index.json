@@ -2226,6 +2226,26 @@
         "skill-matched-comparison@4",
         "skill-local-to-experiment@4"
       ]
+    },
+    {
+      "entry_id": "research-action-selection-and-stopping",
+      "revision": "1",
+      "kind": "procedure",
+      "task": "soft_robot_research",
+      "structure": "tendon_robot_family",
+      "failure_type": "research_method",
+      "version": "1",
+      "path": "memory/research-action-selection-and-stopping/v1.json",
+      "status": "public_procedural_guidance; generalization_unverified",
+      "introduced_in": "knowledge_organization_v1",
+      "resource_role": "skill",
+      "authored_language": "en",
+      "summary": "Choose the least costly admissible research action whose possible outcomes could change a decision. Separate performance, physical legality and missing evidence. Stop under the frozen contract once all required evidence is sufficient.",
+      "applicable_tasks": [
+        "passive_response",
+        "soft_robot_research"
+      ],
+      "skill_type": "Research Decision"
     }
   ]
 }

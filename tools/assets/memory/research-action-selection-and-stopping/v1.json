@@ -1,0 +1,23 @@
+{
+  "entry_id": "research-action-selection-and-stopping",
+  "revision": "1",
+  "version": "1",
+  "knowledge_type": "skill",
+  "scope": "General procedural guidance from one passive-design Pilot. Generalization is unverified; no universal optimum or causal benefit is claimed.",
+  "provenance": {
+    "kind": "abstracted_pilot_decision_pattern",
+    "source_study": "p3-ablation-no-math-20261112-account3-restart1",
+    "disclosure": "No candidate parameters, winning design or historical Store is provided."
+  },
+  "principle": "Choose the least costly admissible research action whose possible outcomes could change a decision. Separate performance, physical legality and missing evidence. Stop under the frozen contract once all required evidence is sufficient.",
+  "problem_or_trigger": "Before requesting numerical research, after an important result, or when deciding to revise, continue or stop.",
+  "workflow": [
+    "Read the current saved task response first. Separate signed metric violations, illegal geometry/routing, dynamic or initialization qualification failures, and missing evaluation evidence. Preserve conditions already satisfied.",
+    "Before mathematics, state the unresolved question and competing explanations, what each possible result would change, the simpler direct physical alternative, and estimated numerical/model/episode cost. If every plausible result leads to the same next edit, skip that analysis.",
+    "Use only the smallest necessary available API or operation. Mechanism observation can clarify unknown causes; local sensitivity needs admissible numerical conditions; candidate comparisons need explicit matching; two-parameter research is justified when independent effects are insufficient; optimization needs explicit objective, variables, constraints and an applicable solver. These purposes apply equally when Main composes low-level calls itself.",
+    "Check existing candidate identities and saved evidence before repeating. Distinguish a new physical execution from reused records. A rejected request is not new science, and a failed presentation receipt does not erase an already saved result.",
+    "When observed changes improve one requirement but hurt another, an interior parameter experiment may test a locally bracketed tradeoff. Choose its value from current observations and legal domains; no historical winning value or monotonicity assumption is supplied.",
+    "After important research, record whether evidence is new, whether it changes the hypothesis, parameter choice or next action, whether it merely confirms a decision, and whether the same type of analysis should stop. not_defined, not_comparable and unreliable derivatives never become valid optimization directions.",
+    "Stop when frozen task bounds and mandatory physical qualifications have complete evidence and no required research remains. Core numerical success alone cannot waive physical qualification. Conversely, do not prolong the run for optional mathematics or certificates waived by the frozen contract. At a hard cap preserve the best evidence and actual violations, label missing evidence UNKNOWN and never infer global infeasibility."
+  ]
+}

@@ -692,7 +692,7 @@ def analysis_capabilities(configuration, requirements, protocol, *, model=None, 
     p=TaskAnalysisProtocol.model_validate(protocol)
     rows=[]
     for operation in get_args(AnalysisRequest.model_fields['operation'].annotation):
-        if operation in ('mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1','mechanism_structure_v1'):continue
+        if operation in ('mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1','mechanism_structure_v1','direct_math_api_v1'):continue
         native=operation in ('native_dynamics_v1','short_input_response_v1','fixed_input_structure_v1','mujoco_direct_control_v1')
         sampled=operation in ('trajectory_feasibility','task_capability','mujoco_direct_control_v1')
         static=operation in ('equilibrium','input_sensitivity','design_sensitivity')
@@ -860,7 +860,7 @@ def check_analysis_applicability(requirements, query, assessment, model=None, ex
     of tendon_family.math_analysis.linear_model; constructed models are checked
     again using their actual outputs before metrics/endpoint computations.
     """
-    if requirements.horizon_semantics=='static_load_cases' and query.operation!='mechanism_structure_v1':
+    if requirements.horizon_semantics=='static_load_cases' and query.operation not in ('mechanism_structure_v1','direct_math_api_v1'):
         return dict(status='not_applicable',reasons=['PASSIVE_REQUIRES_REGISTERED_CONSTRAINED_MECHANISM_METHOD'],
             constraint_coverage=[],full_task_supported=False)
     if assessment['model_id']=='model.mujoco_native':

@@ -135,7 +135,7 @@ def native_point(host, query, configuration):
     not during admission. No complete optimizer record or GVS recipe is needed.
     """
     if configuration['task'].get('physical_problem'):
-        if not query.mechanism_study:raise ValueError('PASSIVE_CONTROL_AND_DYNAMIC_METHODS_NOT_ADAPTED')
+        if not (query.mechanism_study or getattr(query,'direct_math',None)):raise ValueError('PASSIVE_CONTROL_AND_DYNAMIC_METHODS_NOT_ADAPTED')
         from extensions.tendon_family.compiler import resolve
         physics=resolve(configuration['robot']['structure']['data'],configuration['policy']['discretization']['data'])
         return dict(actual_time_s=0.,dof_order=physics['dofs'],tendon_order=[],u=[],

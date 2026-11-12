@@ -288,10 +288,18 @@ def resolve(path, profile=None, *, backend_profile=None):
     if methods is not None:
         from tools.research.nonlinear_capability import DIRECT
         if (not isinstance(methods,dict) or not methods or
-                set(methods)-{'sampled-affine-conic-minimax-v1','controlled-capability-sensitivity-v1','mujoco-nonlinear-task-capability-v1','mujoco-reoptimized-structure-response-v1','mechanism_structure_v1',DIRECT} or
+                set(methods)-{'sampled-affine-conic-minimax-v1','controlled-capability-sensitivity-v1','mujoco-nonlinear-task-capability-v1','mujoco-reoptimized-structure-response-v1','mechanism_structure_v1','direct_math_api_v1',DIRECT} or
                 any(v is not None and (not isinstance(v,str) or not v.strip()) for v in methods.values())):
             raise ValueError('EXPLICIT_VERSIONED_MATHEMATICAL_METHOD_AUTHORIZATION_REQUIRED')
         methods.setdefault(DIRECT,'Legacy analysis-authorized Direct control research; independent Replay remains required.')
+    direct_apis=study.pop('direct_math_apis',None)
+    if direct_apis is not None:
+        from tools.research.direct_math import APIS
+        apis=direct_apis
+        if not isinstance(apis,list) or not apis or len(apis)!=len(set(apis)) or set(apis)-set(APIS) or not (methods or {}).get('direct_math_api_v1'):
+            raise ValueError('EXPLICIT_SUPPORTED_DIRECT_MATH_API_WHITELIST_REQUIRED')
+        if (methods or {}).get('mechanism_structure_v1'):
+            raise ValueError('DIRECT_INTERFACE_EXCLUDES_HIGH_LEVEL_MECHANISM_INTERFACE')
     initialization_methods=study.pop('control_initialization_methods',None)
     if initialization_methods is not None:
         from typing import get_args
@@ -719,6 +727,7 @@ def resolve(path, profile=None, *, backend_profile=None):
             raise ValueError('EXPLICIT_ENGINEERING_READINESS_REPORT_REQUIRED')
         study['tool_readiness']=dict(sorosim_matlab=report)
     if methods is not None:study['mathematical_methods']=methods
+    if direct_apis is not None:study['direct_math_apis']=direct_apis
     if initialization_methods is not None:study['control_initialization_methods']=initialization_methods
     if mechanism_operations is not None:study['mechanism_operations']=mechanism_operations
     if 'mujoco_control' in study.get('family_search',{}).get('evaluation_modes',[]) and (

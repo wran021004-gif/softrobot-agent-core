@@ -110,7 +110,7 @@ def assessment(configuration, requirements):
 
 def applicability(requirements, query, assessed, point):
     if requirements.binding.get('physical_problem'):
-        study=getattr(query,'mechanism_study',None)
+        study=getattr(query,'mechanism_study',None) or getattr(query,'direct_math',None)
         dynamic=bool(study and study.effect_semantics=='finite_time_task_response')
         supported=bool(study and (study.point_semantics=='re_equilibrated' or dynamic and study.point_semantics=='frozen_task_initial_state'))
         return dict(status='applicable' if supported else 'not_applicable',reasons=[] if supported else ['Passive problem requires re-equilibrated mechanism analysis.'],

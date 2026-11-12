@@ -324,10 +324,19 @@ def evidence_query_schema(study):
     return provider_schema(schema)
 
 
+def project_math_tools(spec,registry,used):
+    from tools.research.direct_math import enabled
+    from tools.research.budget import mathematics_fits
+    registry.pop('research_analysis' if enabled(spec) else 'research_math_api',None)
+    if not mathematics_fits(spec,used):
+        registry.pop('research_analysis',None);registry.pop('research_math_api',None)
+
+
 def tool_directory(host, registry):
     """Describe the currently admitted native tools without parameter schemas."""
     resources={'research_plan':'Action-specific original budgets and scientific admission.',
         'research_analysis':'Shared mathematical allowance; selected method and original execution admission.',
+        'research_math_api':'Explicit low-level numerical APIs; shared original mathematical/physical admission.',
         'research_rl':'Existing RL stage/worker budgets and owned run identities.',
         'research_investigate':'Accounted Reporter requests when interpretation is needed; no scientific worker.',
         'evidence_read':'One public operation; original full-read rules.',
@@ -1068,6 +1077,9 @@ async def converse(host,*,session_handoff=None,pause_after_completed_invocations
                         record(host,'plan_choice_resolution',dict(tool_use_id=use['toolUseId'],
                             original_input=use['input'],expanded_plan=payload,scientific_execution_started=False))
                     value=dispatch(host,payload,'native-'+use['toolUseId'])
+                elif kind=='direct_math':
+                    from tools.research.direct_math import dispatch as direct_dispatch
+                    value=direct_dispatch(host,use['input'],'native-'+use['toolUseId'],guard=guard)
                 elif kind=='analysis':
                     payload=use['input']
                     from tools.research.scientific_intent import enabled as question_enabled, compile_question
@@ -1131,9 +1143,11 @@ async def converse(host,*,session_handoff=None,pause_after_completed_invocations
                         and state(host)['spec'].get('research_decisions',{}).get('context_limits')):
                     from tools.research.research_context import tool_feedback
                     value=tool_feedback(host,value)
-                if kind in ('plan','analysis','rl') and state(host)['spec'].get('research_decisions'):
+                if kind in ('plan','analysis','direct_math','rl') and state(host)['spec'].get('research_decisions'):
                     report=scientific_feedback(host,original,before)
                     if report is not None:value=report
+                if kind=='direct_math' and original.get('direct_math'):
+                    value={**value,'direct_math':original['direct_math']}
                 result=original.get('result',original) if isinstance(original,dict) else {}
                 if result.get('execution_feedback'):value['execution_feedback']=result['execution_feedback']
                 if isinstance(original,dict) and original.get('inference_assessment'):
@@ -1207,6 +1221,14 @@ async def converse(host,*,session_handoff=None,pause_after_completed_invocations
             description='Read-only investigation of saved results: provide a question and result references; exact reads and authorized experience_queries are optional. No candidate is needed to read existing evidence. This does not execute research_plan(diagnose) or candidate-bound research_analysis. Returns compact findings and an interpretation_query; internal reads give no SELECT/STOP credit.',
             inputSchema={'json':InvestigationRequest.model_json_schema()}),handler('investigate')))
     agent=None
+    from tools.research.experience import add_main_guidance
+    instructions=add_main_guidance(instructions,state(host)['spec'])
+    from tools.research.direct_math import enabled as direct_enabled, schema as direct_schema
+    if direct_enabled(state(host)['spec']):
+        native.append(PythonAgentTool('research_math_api',dict(name='research_math_api',
+            description='Explicit low-level numerical API calls. Select owned candidate, registered observable, physical load and parameters. No ScientificQuestion, diagnose Plan or semantic mechanism operation. Compose calls and interpret validity yourself; no task acceptance.',
+            inputSchema={'json':direct_schema(state(host)['spec'])}),handler('direct_math')))
+        instructions+='\nUse research_math_api for explicitly authorized numerical functions; organize your own question, parameter/observable choices and sequence. High-level research_analysis mechanism operations are unavailable. Ordinary passive FamilySearch remains the direct physical response path.'
     def build_session(session_id=None):
         restored=build_harness(host,transport=boundary,api_key=api_key,instructions=instructions,
             model_class=live_model_class(boundary),tool_executor=SequentialToolExecutor(),research_tools=[t for t in native if t is not native[1]] if state(host)['spec'].get('rl_evaluation_source') else native,
@@ -1410,6 +1432,7 @@ async def converse(host,*,session_handoff=None,pause_after_completed_invocations
                 else:agent.tool_registry.registry.pop('research_analysis',None)
             if not enabled(s['spec'],'analysis') or not mathematics_fits(s['spec'],s.get('mathematical_evaluations',0)):
                 agent.tool_registry.registry.pop('research_analysis',None)
+            project_math_tools(s['spec'],agent.tool_registry.registry,s.get('mathematical_evaluations',0))
             # Provider readiness is checked per selected model by analysis.dispatch;
             # unavailable MATLAB must not hide authorized native MuJoCo mathematics.
             if english_native(s['spec']):
@@ -1427,6 +1450,7 @@ async def converse(host,*,session_handoff=None,pause_after_completed_invocations
                 native[0].tool_spec={**native[0].tool_spec,'inputSchema':{'json':schema}}
                 agent.tool_registry.registry.pop('experience_retrieve',None)
                 agent.tool_registry.registry.pop('research_analysis',None)
+                agent.tool_registry.registry.pop('research_math_api',None)
                 if rl_mode:
                     rl_tool=next(t for t in native if t.tool_name=='research_rl')
                     schema=deepcopy(rl_tool.tool_spec['inputSchema']['json'])

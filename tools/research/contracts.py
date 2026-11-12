@@ -707,10 +707,47 @@ class FamilyMixedSearchV2(Contract):
         return 'passive_equilibrium' if self.analysis.physical_problem else 'mathematical_proxy'
 
 
+class DirectMathPoint(Contract):
+    label: Literal['00','10','01','11']
+    parameter_values: dict[str, FiniteFloat]
+
+
+class DirectMathAPI(Contract):
+    function: Literal['model_evaluate','stencil','matched_points','finite_difference','minimize','interaction_evidence','observe','observed_task_improvement','subtract','minimum','maximum']
+    target: MechanismTarget | PhysicalMechanismTarget | None = None
+    parameter_paths: list[str] = Field(default_factory=list,max_length=2)
+    parameter_values: dict[str, FiniteFloat] = Field(default_factory=dict)
+    parameter_bounds: dict[str, tuple[FiniteFloat, FiniteFloat]] = Field(default_factory=dict)
+    load_condition: str | None = None
+    execution_profile: PassiveExecutionProfile | None = None
+    passive_ablation: list[str] | None = Field(default=None,min_length=1,max_length=64)
+    effect_semantics: Literal['mechanism_effect','re_equilibrated_passive_response','finite_time_task_response'] = 'mechanism_effect'
+    point_semantics: Literal['re_equilibrated','frozen_task_initial_state'] = 're_equilibrated'
+    max_evaluations: StrictInt = Field(default=1,ge=1,le=64)
+    local_radius_fraction: FiniteFloat = Field(default=.02,gt=0,le=.1)
+    sources: list[EvidenceRef] = Field(default_factory=list,max_length=16)
+    source_record_indices: list[StrictInt] = Field(default_factory=list,max_length=16)
+    points: list[DirectMathPoint] = Field(default_factory=list,max_length=4)
+
+    @model_validator(mode='after')
+    def bound_inputs(self):
+        if self.source_record_indices and (len(self.source_record_indices)!=len(self.sources) or any(i<0 for i in self.source_record_indices)):raise ValueError('ONE_NONNEGATIVE_RECORD_INDEX_PER_SOURCE_REQUIRED')
+        if len(set(self.parameter_paths))!=len(self.parameter_paths):raise ValueError('DISTINCT_PARAMETER_PATHS_REQUIRED')
+        if set(self.parameter_values)-set(self.parameter_paths):raise ValueError('VALUES_REQUIRE_SELECTED_REGISTERED_PATHS')
+        if self.effect_semantics=='finite_time_task_response' and self.point_semantics!='frozen_task_initial_state':raise ValueError('DYNAMIC_REQUIRES_FROZEN_INITIAL_STATE')
+        if self.effect_semantics!='finite_time_task_response' and self.point_semantics!='re_equilibrated':raise ValueError('STATIC_REQUIRES_RE_EQUILIBRATION')
+        return self
+
+
+class DirectMathToolRequest(DirectMathAPI):
+    candidate: EvidenceRef
+
+
 class AnalysisRequest(Contract):
     candidate: EvidenceRef = Field(description='Exact current-Study owned structure candidate reference, not a control sequence. operation and model_source must match a registered mathematical_capabilities method.')
-    operation: Literal['equilibrium','linearization','controllability','endpoint','braking','instantaneous_braking_v1','trajectory_feasibility','task_capability','input_sensitivity','design_sensitivity','native_dynamics_v1','short_input_response_v1','fixed_input_structure_v1','mujoco_direct_control_v1','mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1','mechanism_structure_v1']
+    operation: Literal['equilibrium','linearization','controllability','endpoint','braking','instantaneous_braking_v1','trajectory_feasibility','task_capability','input_sensitivity','design_sensitivity','native_dynamics_v1','short_input_response_v1','fixed_input_structure_v1','mujoco_direct_control_v1','mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1','mechanism_structure_v1','direct_math_api_v1']
     mechanism_study: MechanismStudy | None = None
+    direct_math: DirectMathAPI | None = None
     model_source: Literal['controller','gvs','sorosim','mujoco'] = 'controller'
     native: NativeAnalysisOptions = Field(default_factory=NativeAnalysisOptions)
     nonlinear_response: NonlinearStructureResponse | None = None
@@ -731,7 +768,7 @@ class AnalysisRequest(Contract):
     @staticmethod
     def validate_operating_point(operation, operating_point, *, optimal_sensitivity=False):
         """Shared point restrictions for full validation and method discovery."""
-        native_operation=operation in ('native_dynamics_v1','short_input_response_v1','fixed_input_structure_v1','mujoco_direct_control_v1','mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1','mechanism_structure_v1')
+        native_operation=operation in ('native_dynamics_v1','short_input_response_v1','fixed_input_structure_v1','mujoco_direct_control_v1','mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1','mechanism_structure_v1','direct_math_api_v1')
         if operation in ('mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1') and operating_point!='standardized_initial_pretension':
             raise ValueError('NONLINEAR_CAPABILITY_REQUIRES_OWN_FROZEN_INITIALIZATION')
         if native_operation and operating_point not in ('saved_state','standardized_initial_pretension'):
@@ -747,10 +784,17 @@ class AnalysisRequest(Contract):
 
 
     @model_validator(mode='after')
+    def direct_binding(self):
+        if (self.operation=='direct_math_api_v1')!=(self.direct_math is not None):raise ValueError('DIRECT_API_DISCRIMINATOR_REQUIRED')
+        if self.direct_math is not None and (self.model_source!='mujoco' or self.mechanism_study is not None or self.native!=NativeAnalysisOptions() or self.operating_point!='standardized_initial_pretension'):
+            raise ValueError('DIRECT_REQUIRES_FROZEN_NATIVE_MODEL_WITHOUT_HIGH_LEVEL_OPERATION')
+        return self
+
+    @model_validator(mode='after')
     def exact_state(self):
         if self.native_state_selection and (not self.saved_state or self.model_source!='mujoco'):
             raise ValueError('NATIVE_TRAJECTORY_SELECTION_REQUIRES_SAVED_NATIVE_RESULT')
-        native_operation=self.operation in ('native_dynamics_v1','short_input_response_v1','fixed_input_structure_v1','mujoco_direct_control_v1','mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1','mechanism_structure_v1')
+        native_operation=self.operation in ('native_dynamics_v1','short_input_response_v1','fixed_input_structure_v1','mujoco_direct_control_v1','mujoco_nonlinear_task_capability_v1','mujoco_reoptimized_structure_response_v1','mechanism_structure_v1','direct_math_api_v1')
         if (self.operation=='mechanism_structure_v1') != (self.mechanism_study is not None):
             raise ValueError('MECHANISM_OPERATION_REQUIRES_VERSIONED_STUDY')
         if self.mechanism_study:
@@ -801,7 +845,7 @@ class AnalysisRequest(Contract):
             if getattr(self,key) is None:value.pop(key,None)
         if self.model_source=='controller':value.pop('model_source',None)
         if self.model_source!='mujoco':value.pop('native',None)
-        for key in ('structure_response','control_optimization','nonlinear_response','mechanism_study','native_state_selection'):
+        for key in ('structure_response','control_optimization','nonlinear_response','mechanism_study','direct_math','native_state_selection'):
             if getattr(self,key) is None:value.pop(key,None)
         return value
 
@@ -1072,6 +1116,7 @@ class KnowledgePolicy(Contract):
     allow_benchmark_answers: bool = False
     delivery: Literal['optional_reads_v1','compact_skill_v1'] = 'optional_reads_v1'
     organization: Literal['typed_knowledge_v1'] | None = None
+    main_context_entries: dict[str,str] = Field(default_factory=dict)
 
     @model_serializer(mode='wrap')
     def preserve_legacy_policy(self,handler):
@@ -1079,6 +1124,7 @@ class KnowledgePolicy(Contract):
         if self.delivery=='optional_reads_v1':result.pop('delivery',None)
         if not self.include_entry_revisions:result.pop('include_entry_revisions',None)
         if self.organization is None:result.pop('organization',None)
+        if not self.main_context_entries:result.pop('main_context_entries',None)
         return result
 
 
@@ -1218,7 +1264,7 @@ class ResearchRecallQuery(Contract):
 
 
 class ResearchRouteQuery(Contract):
-    tool: Literal['research_plan','evidence_read','research_recall','research_investigate','experience_retrieve','research_analysis','research_rl']
+    tool: Literal['research_plan','evidence_read','research_recall','research_investigate','experience_retrieve','research_analysis','research_math_api','research_rl']
     action: str | None = Field(default=None,description='Exact Plan action or RL operation from the directory; omit for other tools.')
 
 

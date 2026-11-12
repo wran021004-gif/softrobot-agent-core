@@ -69,6 +69,9 @@ def calculate(configuration,binding,query,exact_point=None,*,checkpoint=None,des
         if not design_context or design_context.get('kind')!='controlled-capability-sensitivity-v1':
             raise ValueError('ADMITTED_SAVED_MODEL_CONTEXT_REQUIRED')
         return calculate_sensitivity(design_context,q,checkpoint)
+    if q.direct_math:
+        from tools.research.direct_math import calculate as direct_calculate
+        return direct_calculate(configuration,binding,q,exact_point,design_context,checkpoint=checkpoint)
     p=q.protocol
     inp=SessionInput.model_validate(configuration)
     requirements=describe_analysis_requirements(inp,binding)
@@ -357,6 +360,16 @@ def dispatch(host,query,key,*,guard,origin='model',plan_reference=None):
         return dict(**compact_result(host.store.artifact(ref),ref),
             operation_reuse=dict(additional_numerical_s=0,additional_analysis_evaluations=0))
     guard(host,origin!='engineering_preflight')
+    if q.direct_math:
+        from tools.research.direct_math import enabled,APIS
+        spec=state(host)['spec']
+        if not enabled(spec) or q.direct_math.function not in spec.get('direct_math_apis',APIS):
+            return dict(status='not_applicable',reason='DIRECT_MATH_API_NOT_AUTHORIZED',task_acceptance='unmeasured')
+        if spec.get('mathematical_methods',{}).get('mechanism_structure_v1'):
+            raise ValueError('DIRECT_EXCLUDES_HIGH_LEVEL_INTERFACE')
+        from tools.research.research_context import mathematics_authorization
+        if mathematics_authorization(host,state(host))['registered_study_scope_authorized'] is not True:
+            raise ValueError('REGISTERED_STUDY_MATHEMATICS_SCOPE_REQUIRED')
     if q.mechanism_study:
         from tools.research.scientific_intent import mechanism_interface
         from tools.research.structure_research import allowed_operations
@@ -393,9 +406,16 @@ def dispatch(host,query,key,*,guard,origin='model',plan_reference=None):
         if method_fit:return dict(status='not_applicable',reason=str(exc),admission=method_fit,task_acceptance='unmeasured')
         raise
     if c['configuration']['task'].get('physical_problem') and (
-            q.operation!='mechanism_structure_v1' or q.native.tensions_n is not None or q.saved_state or q.execution or q.update_id is not None):
+            q.operation not in ('mechanism_structure_v1','direct_math_api_v1') or q.native.tensions_n is not None or q.saved_state or q.execution or q.update_id is not None):
         return dict(status='not_applicable',reason='PASSIVE_MATHEMATICS_REQUIRES_NO_ACTIVE_INPUT_OR_SAVED_DYNAMIC_SOURCE',task_acceptance='unmeasured')
     sensitivity_context=None;preparation_s=0.
+    if q.direct_math:
+        from tools.research.direct_math import prepare
+        current=state(host);sources=[]
+        for ref in q.direct_math.sources:
+            if plain(ref) not in current.get('analysis_results',[]):raise ValueError('CURRENT_STUDY_DIRECT_RESULT_REQUIRED')
+            sources.append(host.store.artifact(ref))
+        sensitivity_context=prepare(current['spec'],{**c,'_reference':plain(q.candidate)},q.direct_math,sources)
     if q.mechanism_study:
         from tools.research.structure_research import prepare_context
         sensitivity_context=prepare_context(state(host)['spec'],c,q.mechanism_study,
@@ -441,7 +461,7 @@ def dispatch(host,query,key,*,guard,origin='model',plan_reference=None):
         raise ValueError('ANALYSIS_REQUIRES_DECLARED_FROZEN_PROTOCOL')
     count=3 if q.operation=='design_sensitivity' else 2 if q.capability_comparison is not None else 1
     if q.structure_response:count=1+len(q.structure_response.candidates)
-    if q.mechanism_study:
+    if q.mechanism_study or q.direct_math:
         count=sensitivity_context['evaluations']
     if method_fit:count=method_fit['expected_mathematical_evaluations']
     fit=admission(host,requested=count,engineering=origin=='engineering_preflight')
@@ -753,7 +773,7 @@ def scientific_status(value):
     status=value.get('status')
     boundary=value.get('boundary') or {}
     cost=next(((value.get(k) or {}).get('cost') for k in
-        ('native_dynamics','native_progress','native_diagnostic','structure_research') if (value.get(k) or {}).get('cost')),None)
+        ('native_dynamics','native_progress','native_diagnostic','structure_research','direct_math') if (value.get(k) or {}).get('cost')),None)
     native=value.get('nonlinear_capability') or {}
     j=native.get('J')
     finite_j=isinstance(j,(int,float)) and not isinstance(j,bool) and math.isfinite(j)
@@ -978,6 +998,11 @@ def compact_result(value, reference):
     summary=dict(reference=reference,**{k:value.get(k) for k in (
         'status','candidate','operation','proxy_values','origin','owning_study','charged_numerical_s','charged_analysis_evaluations',
         'local_model_constraints','internal_calculations','score_semantics','scoped_claim','analysis_applicability')})
+    if value.get('direct_math'):
+        api=value['direct_math']
+        summary['direct_math']=dict(function=api['function'],result=api['result'],cost=api['cost'],parameter_metadata=api['parameter_metadata'],
+            record_queries=[dict(reference=reference,view='full',pointer='/direct_math/records/'+str(i))
+                for i in range(len(api['records']))],scope=api['scope'])
     summary['scientific_computation']=scientific_status(value)
     summary['diagnostic_layers']=diagnostic_layers(value)
     summary['diagnostic_overview']=diagnostic_overview(summary['diagnostic_layers'])

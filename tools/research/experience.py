@@ -94,7 +94,24 @@ def freeze_knowledge(policy):
             body=(resource_path(row['path'])).read_bytes();value=json.loads(body)
             row['compact_skill']=dict(principle=value['principle'][:280],
                 when=value['problem_or_trigger'][:180])
+    for entry_id,revision in policy.get('main_context_entries',{}).items():
+        row=next((r for r in rows if r['entry_id']==entry_id and r['revision']==revision),None)
+        if row is None or knowledge_type(row)!='skill':raise ValueError('MAIN_CONTEXT_REQUIRES_FROZEN_AUTHORIZED_SKILL')
+        row['main_context']=json.loads(resource_path(row['path']).read_bytes())
     return dict(entries=rows)
+
+
+def main_context(spec):
+    """Opt-in full Skill bodies from the frozen manifest, included in Main's system prompt."""
+    if not knowledge_enabled(spec):return []
+    return [dict(entry_id=r['entry_id'],revision=r['revision'],content_sha256=r['content_sha256'],
+        guidance=r['main_context'],scope='Procedural guidance; not current scientific evidence or a candidate answer.')
+        for r in spec.get('knowledge_manifest',{}).get('entries',[]) if r.get('main_context')]
+
+
+def add_main_guidance(instructions,spec):
+    guidance=main_context(spec)
+    return instructions+('\nFROZEN_MAIN_RESEARCH_GUIDANCE\n'+json.dumps(guidance,ensure_ascii=False) if guidance else '')
 
 
 def knowledge_enabled(spec):
