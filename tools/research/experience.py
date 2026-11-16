@@ -46,7 +46,13 @@ def freeze_study_entries(spec, index, policy=None):
     return [row for row in rows if _permitted(row,policy,legacy=True)]
 
 
+def _role_allowed(entry, policy):
+    roles=policy.get('allowed_resource_roles')
+    return roles is None or knowledge_type(entry) in roles
+
+
 def _permitted(entry, policy, *, legacy=False):
+    if not _role_allowed(entry,policy):return False
     if entry['entry_id'] in policy.get('exclude_entry_ids',[]):return False
     if policy.get('include_entry_ids') is not None and entry['entry_id'] not in policy['include_entry_ids']:return False
     revisions=policy.get('include_entry_revisions',{}).get(entry['entry_id'])
@@ -140,7 +146,7 @@ def entries(host):
     if policy.get('mode')=='off':return []
     manifest=spec.get('knowledge_manifest')
     if manifest is not None:
-        rows=deepcopy(manifest['entries'])
+        rows=deepcopy([r for r in manifest['entries'] if _role_allowed(r,policy)])
     else:
         # Frozen P6 Studies retain their historical catalogue; adding files must
         # not silently disclose new answers or reinterpret their experiments.
@@ -152,6 +158,7 @@ def entries(host):
         rows=[r for r in rows if _permitted(r,policy,legacy=True)]
     rows += [r for r in spec.get('study_experience_entries',[])
         if r['study_id']==spec['study_id'] and r['status']==PRIVATE_STATUS
+        and _role_allowed(r,policy)
         and (manifest is not None or _permitted(r,policy,legacy=True))]
     return rows
 
