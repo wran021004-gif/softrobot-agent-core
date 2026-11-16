@@ -1,0 +1,360 @@
+{
+  "schema": "knowledge_skill_ablation_resource_manifest_v1",
+  "core_repository": "wran021004-gif/softrobot-agent-core",
+  "core_branch": "codex/knowledge-migration-33-ablation-20261116",
+  "core_index_git_blob_sha": "6daf6c7ccb9bc27bb3132b066c3a432073428ff9",
+  "source_knowledge_migration": "tools/assets/memory/historical_33/migration_manifest.json",
+  "resource_selection_rule": "Freeze exactly one latest eligible revision per entry_id. K1S0 uses only the migrated historical-33 Knowledge procedures; K0S1 uses only the latest Core Skill entries. No other role is exposed.",
+  "conditions": {
+    "K0S0": {
+      "knowledge": "OFF",
+      "skill": "OFF",
+      "policy": {
+        "organization": "typed_knowledge_v1",
+        "allowed_resource_roles": [],
+        "include_entry_ids": [],
+        "include_entry_revisions": {},
+        "allow_benchmark_answers": false,
+        "delivery": "optional_reads_v1"
+      }
+    },
+    "K1S0": {
+      "knowledge": "ON",
+      "skill": "OFF",
+      "policy": {
+        "organization": "typed_knowledge_v1",
+        "allowed_resource_roles": [
+          "knowledge"
+        ],
+        "include_entry_ids": [
+          "model-physics-comparison",
+          "nmpc-stopping-selection",
+          "nmpc-whole-window-speed",
+          "offline-verification-gates",
+          "passive-force-response-research",
+          "research-bounded-continuation",
+          "research-contact-causality",
+          "research-stable-start",
+          "research-strict-near-tolerance",
+          "research-timed-tracking",
+          "research-witness-and-cost",
+          "rl-pre-failure-state",
+          "rl-spent-vs-inherited",
+          "rl-surrogate-boundary"
+        ],
+        "include_entry_revisions": {
+          "model-physics-comparison": [
+            "1"
+          ],
+          "nmpc-stopping-selection": [
+            "1"
+          ],
+          "nmpc-whole-window-speed": [
+            "1"
+          ],
+          "offline-verification-gates": [
+            "1"
+          ],
+          "passive-force-response-research": [
+            "2"
+          ],
+          "research-bounded-continuation": [
+            "2"
+          ],
+          "research-contact-causality": [
+            "2"
+          ],
+          "research-stable-start": [
+            "2"
+          ],
+          "research-strict-near-tolerance": [
+            "3"
+          ],
+          "research-timed-tracking": [
+            "2"
+          ],
+          "research-witness-and-cost": [
+            "2"
+          ],
+          "rl-pre-failure-state": [
+            "1"
+          ],
+          "rl-spent-vs-inherited": [
+            "1"
+          ],
+          "rl-surrogate-boundary": [
+            "1"
+          ]
+        },
+        "allow_benchmark_answers": false,
+        "delivery": "optional_reads_v1"
+      }
+    },
+    "K0S1": {
+      "knowledge": "OFF",
+      "skill": "ON",
+      "policy": {
+        "organization": "typed_knowledge_v1",
+        "allowed_resource_roles": [
+          "skill"
+        ],
+        "include_entry_ids": [
+          "passive-structure-mechanics",
+          "research-action-selection-and-stopping",
+          "skill-continue-or-stop",
+          "skill-finite-search",
+          "skill-local-to-experiment",
+          "skill-matched-comparison",
+          "skill-parameter-model",
+          "skill-witness-replay"
+        ],
+        "include_entry_revisions": {
+          "passive-structure-mechanics": [
+            "1"
+          ],
+          "research-action-selection-and-stopping": [
+            "1"
+          ],
+          "skill-continue-or-stop": [
+            "3"
+          ],
+          "skill-finite-search": [
+            "3"
+          ],
+          "skill-local-to-experiment": [
+            "4"
+          ],
+          "skill-matched-comparison": [
+            "4"
+          ],
+          "skill-parameter-model": [
+            "4"
+          ],
+          "skill-witness-replay": [
+            "3"
+          ]
+        },
+        "allow_benchmark_answers": false,
+        "delivery": "optional_reads_v1"
+      }
+    }
+  },
+  "selected_resources": {
+    "knowledge": [
+      {
+        "entry_id": "model-physics-comparison",
+        "revision": "1",
+        "type": "diagnostic",
+        "summary": "Interpret local proxies and matched physical observations at their own scope before proposing structural mechanisms.",
+        "path": "memory/historical_33/procedures/model-physics-comparison_v1.json",
+        "source_blob_sha": "f6ec2182d9cc37baa9e9436fb6d92713bad70777"
+      },
+      {
+        "entry_id": "nmpc-stopping-selection",
+        "revision": "1",
+        "type": "diagnostic",
+        "summary": "Changed commands or apparent improvement after altered work/time limits.",
+        "path": "memory/historical_33/procedures/nmpc-stopping-selection_v1.json",
+        "source_blob_sha": "4bf14c7d3788a80ede7b2a26660ddae6d5f19cfb"
+      },
+      {
+        "entry_id": "nmpc-whole-window-speed",
+        "revision": "1",
+        "type": "diagnostic",
+        "summary": "Holding speed fails although position and final predicted speed pass.",
+        "path": "memory/historical_33/procedures/nmpc-whole-window-speed_v1.json",
+        "source_blob_sha": "0e3880cffa63f4b65e55648aea3b387270d86cbd"
+      },
+      {
+        "entry_id": "offline-verification-gates",
+        "revision": "1",
+        "type": "validation",
+        "summary": "Optimizer passes numerical feasibility and sampled task but independent node vectors disagree.",
+        "path": "memory/historical_33/procedures/offline-verification-gates_v1.json",
+        "source_blob_sha": "1576075fcaa7d4e9e32846ea8f81a4ab627ca660"
+      },
+      {
+        "entry_id": "passive-force-response-research",
+        "revision": "2",
+        "type": "diagnostic",
+        "summary": "Validate unilateral constraint activation and finite loaded dynamics after geometry or static/KKT screening.",
+        "path": "memory/historical_33/procedures/passive-force-response-research_v2.json",
+        "source_blob_sha": "5260ef4447d52deb9a619f8b097f1a9069d1abdc"
+      },
+      {
+        "entry_id": "research-bounded-continuation",
+        "revision": "2",
+        "type": "diagnostic",
+        "summary": "Compare bounded continuation against structural hypotheses while preserving identities, budgets and fair optimization opportunities.",
+        "path": "memory/historical_33/procedures/research-bounded-continuation_v2.json",
+        "source_blob_sha": "b39badb8c236606745988d0a8b2415df161ad1b5"
+      },
+      {
+        "entry_id": "research-contact-causality",
+        "revision": "2",
+        "type": "diagnostic",
+        "summary": "Use phase-aligned diagnostics and competing hypotheses to distinguish contact, instability and numerical failure.",
+        "path": "memory/historical_33/procedures/research-contact-causality_v2.json",
+        "source_blob_sha": "8aff40c4a3a8baa61788669407b6e8a52d1f040e"
+      },
+      {
+        "entry_id": "research-stable-start",
+        "revision": "2",
+        "type": "validation",
+        "summary": "Establish a complete, correctly loaded execution before interpreting task-performance differences.",
+        "path": "memory/historical_33/procedures/research-stable-start_v2.json",
+        "source_blob_sha": "ecdd0ea023ad22ca924a143a6da227f039f5dff6"
+      },
+      {
+        "entry_id": "research-strict-near-tolerance",
+        "revision": "3",
+        "type": "validation",
+        "summary": "Preserve unrounded joint residuals and original evaluator thresholds before considering finite continuation.",
+        "path": "memory/historical_33/procedures/research-strict-near-tolerance_v3.json",
+        "source_blob_sha": "6bbb23c11af9dcafd587d219f44e5ae4d2df9316"
+      },
+      {
+        "entry_id": "research-timed-tracking",
+        "revision": "2",
+        "type": "validation",
+        "summary": "Evaluate time-indexed tracking predicates over the full frozen grid, rather than substituting endpoint reach.",
+        "path": "memory/historical_33/procedures/research-timed-tracking_v2.json",
+        "source_blob_sha": "7e11cc7782ddd855a267827d2b92658cd6246fe1"
+      },
+      {
+        "entry_id": "research-witness-and-cost",
+        "revision": "2",
+        "type": "validation",
+        "summary": "Keep numerical witnesses, independent acceptance, same-structure joint conditions and actual resource ledgers distinct.",
+        "path": "memory/historical_33/procedures/research-witness-and-cost_v2.json",
+        "source_blob_sha": "965ca3527d87ae4794f3a930565b4ddfcd6c0cf2"
+      },
+      {
+        "entry_id": "rl-pre-failure-state",
+        "revision": "1",
+        "type": "diagnostic",
+        "summary": "Capture full pre-failure integration state before attributing instability to PPO or rewards.",
+        "path": "memory/historical_33/procedures/rl-pre-failure-state_v1.json",
+        "source_blob_sha": "115d0f6649b438a74d64a6f35720b01067514687"
+      },
+      {
+        "entry_id": "rl-spent-vs-inherited",
+        "revision": "1",
+        "type": "diagnostic",
+        "summary": "Separate consumed compute from checkpoint-inherited learning; retain uncertain lost work and original schedule horizon.",
+        "path": "memory/historical_33/procedures/rl-spent-vs-inherited_v1.json",
+        "source_blob_sha": "31a68dd7e9df7a254ee6587463988a5ff7843085"
+      },
+      {
+        "entry_id": "rl-surrogate-boundary",
+        "revision": "1",
+        "type": "diagnostic",
+        "summary": "Exclude explicitly marked surrogate training terminals from physical evaluation and demonstrations.",
+        "path": "memory/historical_33/procedures/rl-surrogate-boundary_v1.json",
+        "source_blob_sha": "1b6b6eeb2cca90881bd4bebb07a1d42c7901048b"
+      }
+    ],
+    "skill": [
+      {
+        "entry_id": "passive-structure-mechanics",
+        "revision": "1",
+        "summary": "Passive mechanics, coupled design variables, unilateral sensitivity and historical failure lessons with explicit evidence grades.",
+        "path": "memory/diagnostics/passive-structure-mechanics_v1.json",
+        "content_key": null
+      },
+      {
+        "entry_id": "research-action-selection-and-stopping",
+        "revision": "1",
+        "summary": "Choose the least costly admissible research action whose possible outcomes could change a decision. Separate performance, physical legality and missing evidence. Stop under the frozen contract once all required evidence is sufficient.",
+        "path": "memory/research-action-selection-and-stopping/v1.json",
+        "content_key": null
+      },
+      {
+        "entry_id": "skill-continue-or-stop",
+        "revision": "3",
+        "summary": "Compare the expected information value of remaining legal experiments with their cost and actual limitations. Closure may be justified before budget exhaustion, but lack of success alone does not establish closure.",
+        "path": "memory/knowledge/research_organized_v2.json",
+        "content_key": "skill-continue-or-stop@3"
+      },
+      {
+        "entry_id": "skill-finite-search",
+        "revision": "3",
+        "summary": "A nonpassing finite search is an observation about its parameterization, initialization and allowance, not a verified exclusion of the structure.",
+        "path": "memory/knowledge/research_organized_v2.json",
+        "content_key": "skill-finite-search@3"
+      },
+      {
+        "entry_id": "skill-local-to-experiment",
+        "revision": "4",
+        "summary": "Start from the observed phenomenon, including all constraint components and qualification layers. Separate observations from interpretations and unknown measurements.",
+        "path": "memory/knowledge/research_organized_v2.json",
+        "content_key": "skill-local-to-experiment@4"
+      },
+      {
+        "entry_id": "skill-matched-comparison",
+        "revision": "4",
+        "summary": "Identify competing hypotheses, interventions and confounders before choosing a comparison. Match task, model protocol, named initial state, environment, evaluation conditions and control treatment.",
+        "path": "memory/knowledge/research_organized_v2.json",
+        "content_key": "skill-matched-comparison@4"
+      },
+      {
+        "entry_id": "skill-parameter-model",
+        "revision": "4",
+        "summary": "Begin with a physical mechanism hypothesis and the observation that would distinguish it from a competitor; retrieve only relevant theory and scoped historical experience.",
+        "path": "memory/knowledge/research_organized_v2.json",
+        "content_key": "skill-parameter-model@4"
+      },
+      {
+        "entry_id": "skill-witness-replay",
+        "revision": "3",
+        "summary": "A mathematical witness and a fresh independent registered evaluation have different evidence roles. Joint success requires all frozen conditions on one structure.",
+        "path": "memory/knowledge/research_organized_v2.json",
+        "content_key": "skill-witness-replay@3"
+      }
+    ]
+  },
+  "counts": {
+    "knowledge": 14,
+    "skill": 8,
+    "conditions": 3,
+    "checkpoints_target": 6,
+    "repetitions_per_condition": 2,
+    "new_decision_sessions": 36
+  },
+  "excluded": {
+    "historical_success_cases": {
+      "count": 9,
+      "reason": "benchmark_sensitive full traces; retained in archive but not delivered"
+    },
+    "drafts": {
+      "count": 2,
+      "reason": "draft status; retained in archive but not delivered"
+    },
+    "expert_process": {
+      "count": 3,
+      "reason": "not part of Knowledge/Skill factors"
+    },
+    "experience": {
+      "count": 1,
+      "reason": "not part of Knowledge/Skill factors"
+    }
+  },
+  "common_policy": {
+    "reporter": false,
+    "knowledge_evidence_role": "context_only",
+    "scientific_evidence": false,
+    "action_authority": false,
+    "max_exact_full_reads_per_session": 2,
+    "no_future_outcomes": true,
+    "no_cross_session_context": true
+  },
+  "historical_K1S1": {
+    "rerun": false,
+    "role": "historical_reference_only",
+    "existing_E1_sources": [
+      "softrobot-agent@paper/p0-dataset-20261114:paper_experiment_data/architecture_ablation/knowledge_skill/figure_data/factorial_results.csv",
+      "softrobot-agent@paper/p0-dataset-20261114:paper_experiment_data/architecture_ablation/knowledge_skill/figure_data/ks_four_condition_comparison.json"
+    ],
+    "comparability": "Historical K+S+ results are not a matched fourth Codex condition. Preserve their original actor, model, checkpoint, resources and scoring provenance."
+  }
+}
