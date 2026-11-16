@@ -1114,15 +1114,25 @@ class KnowledgePolicy(Contract):
     include_entry_revisions: dict[str,list[str]] = Field(default_factory=dict)
     allowed_kinds: list[str] | None = None
     allow_benchmark_answers: bool = False
+    allowed_resource_roles: list[Literal['knowledge','skill','experience','expert_process']] | None = Field(
+        default=None,
+        description='Optional independent resource-role gate. None preserves legacy behavior; [] disables all resource roles while keeping the retrieval interface available.')
     delivery: Literal['optional_reads_v1','compact_skill_v1'] = 'optional_reads_v1'
     organization: Literal['typed_knowledge_v1'] | None = None
     main_context_entries: dict[str,str] = Field(default_factory=dict)
+
+    @model_validator(mode='after')
+    def unique_resource_roles(self):
+        if self.allowed_resource_roles is not None and len(self.allowed_resource_roles)!=len(set(self.allowed_resource_roles)):
+            raise ValueError('DUPLICATE_ALLOWED_RESOURCE_ROLES')
+        return self
 
     @model_serializer(mode='wrap')
     def preserve_legacy_policy(self,handler):
         result=handler(self)
         if self.delivery=='optional_reads_v1':result.pop('delivery',None)
         if not self.include_entry_revisions:result.pop('include_entry_revisions',None)
+        if self.allowed_resource_roles is None:result.pop('allowed_resource_roles',None)
         if self.organization is None:result.pop('organization',None)
         if not self.main_context_entries:result.pop('main_context_entries',None)
         return result
