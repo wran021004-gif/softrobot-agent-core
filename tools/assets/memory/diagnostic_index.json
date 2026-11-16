@@ -27,7 +27,8 @@
       "applicable_triggers": [
         "finite_search_structural_review"
       ],
-      "skill_type": "Failure Diagnosis"
+      "skill_type": "Failure Diagnosis",
+      "resource_role": "skill"
     },
     {
       "entry_id": "skill-parameter-model",
@@ -55,7 +56,8 @@
       "applicable_triggers": [
         "first_scientific_plan"
       ],
-      "skill_type": "Physical / Mathematical Reasoning"
+      "skill_type": "Physical / Mathematical Reasoning",
+      "resource_role": "skill"
     },
     {
       "entry_id": "skill-matched-comparison",
@@ -83,7 +85,8 @@
       "applicable_triggers": [
         "finite_search_structural_review"
       ],
-      "skill_type": "Experiment Design"
+      "skill_type": "Experiment Design",
+      "resource_role": "skill"
     },
     {
       "entry_id": "skill-local-to-experiment",
@@ -111,7 +114,8 @@
       "applicable_triggers": [
         "finite_search_structural_review"
       ],
-      "skill_type": "Experiment Design"
+      "skill_type": "Experiment Design",
+      "resource_role": "skill"
     },
     {
       "entry_id": "skill-continue-or-stop",
@@ -139,7 +143,8 @@
       "applicable_triggers": [
         "voluntary_stop"
       ],
-      "skill_type": "Scientific Decision"
+      "skill_type": "Scientific Decision",
+      "resource_role": "skill"
     },
     {
       "entry_id": "skill-witness-replay",
@@ -168,7 +173,8 @@
         "first_scientific_plan",
         "voluntary_stop"
       ],
-      "skill_type": "Evidence Interpretation"
+      "skill_type": "Evidence Interpretation",
+      "resource_role": "skill"
     },
     {
       "entry_id": "phs2d-research-process",
@@ -195,7 +201,8 @@
         "first_scientific_plan",
         "initialization_failure_review",
         "voluntary_stop"
-      ]
+      ],
+      "resource_role": "experience"
     },
     {
       "entry_id": "passive-structure-mechanics",
@@ -220,7 +227,8 @@
         "passive_head_stabilization",
         "passive_progressive_stiffness",
         "soft_robot_research"
-      ]
+      ],
+      "resource_role": "skill"
     },
     {
       "id": "passive-structure-mechanics",
